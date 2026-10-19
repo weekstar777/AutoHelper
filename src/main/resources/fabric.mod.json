@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "autohelper",
+  "version": "${version}",
+  "name": "AutoHelper",
+  "description": "Automatic key presser and server connector",
+  "authors": ["weekstar777"],
+  "contact": {
+    "homepage": "https://github.com/weekstar777/AutoHelper"
+  },
+  "license": "MIT",
+  "icon": "assets/autohelper/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.autohelper.AutoHelperClient"
+    ]
+  },
+  "mixins": [
+    "autohelper.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
