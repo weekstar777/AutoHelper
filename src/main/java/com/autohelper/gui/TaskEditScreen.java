@@ -21,6 +21,9 @@ public class TaskEditScreen extends Screen {
     private TextFieldWidget holdDurationField;
     private TextFieldWidget pressCountField;
 
+    private ButtonWidget saveButton;
+    private ButtonWidget cancelButton;
+
     private String errorMessage = null;
     private int scrollOffset = 0;
     private static final int CONTENT_HEIGHT = 280;  // 总内容高度
@@ -115,18 +118,20 @@ public class TaskEditScreen extends Screen {
             pressCountField.setText("1");
         }
 
-        // Save and Cancel buttons - fixed at bottom
-        this.addDrawableChild(ButtonWidget.builder(
+        // Save and Cancel buttons - will scroll with content
+        saveButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, this.height - 30, 100, 20)
-            .build());
+            .dimensions(centerX - 105, startY + spacing * 6, 100, 20)
+            .build();
+        this.addDrawableChild(saveButton);
 
-        this.addDrawableChild(ButtonWidget.builder(
+        cancelButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, this.height - 30, 100, 20)
-            .build());
+            .dimensions(centerX + 5, startY + spacing * 6, 100, 20)
+            .build();
+        this.addDrawableChild(cancelButton);
     }
 
     private void saveTask() {
@@ -261,6 +266,10 @@ public class TaskEditScreen extends Screen {
         if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 3);
         if (holdDurationField != null) holdDurationField.setY(startY + spacing * 4);
         if (pressCountField != null) pressCountField.setY(startY + spacing * 5);
+
+        // Update button positions
+        if (saveButton != null) saveButton.setY(startY + spacing * 6);
+        if (cancelButton != null) cancelButton.setY(startY + spacing * 6);
     }
 
     @Override
