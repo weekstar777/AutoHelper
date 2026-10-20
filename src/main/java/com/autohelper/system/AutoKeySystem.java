@@ -4,7 +4,6 @@ import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import java.util.Map;
 public class AutoKeySystem {
     private final ConfigManager configManager;
     private Map<String, KeyBinding> keyBindingMap;
-    private Map<String, Integer> keyCodeMap;
     private boolean initialized = false;
 
     public AutoKeySystem(ConfigManager configManager) {
@@ -26,9 +24,8 @@ public class AutoKeySystem {
         }
 
         keyBindingMap = new HashMap<>();
-        keyCodeMap = new HashMap<>();
 
-        // 映射常用键到它们的KeyBinding
+        // 游戏控制键
         keyBindingMap.put("Space", client.options.jumpKey);
         keyBindingMap.put("W", client.options.forwardKey);
         keyBindingMap.put("A", client.options.leftKey);
@@ -38,36 +35,52 @@ public class AutoKeySystem {
         keyBindingMap.put("E", client.options.inventoryKey);
         keyBindingMap.put("Shift", client.options.sneakKey);
         keyBindingMap.put("Ctrl", client.options.sprintKey);
+        keyBindingMap.put("F", client.options.swapHandsKey);
 
-        // 所有字母键
-        for (char c = 'A'; c <= 'Z'; c++) {
-            String key = String.valueOf(c);
-            if (!keyBindingMap.containsKey(key)) {
-                keyCodeMap.put(key, GLFW.GLFW_KEY_A + (c - 'A'));
-            }
+        // 战斗键
+        keyBindingMap.put("R", client.options.attackKey);
+        keyBindingMap.put("T", client.options.useKey);
+        keyBindingMap.put("G", client.options.pickItemKey);
+
+        // 快捷栏 1-9
+        for (int i = 0; i < 9; i++) {
+            keyBindingMap.put(String.valueOf(i + 1), client.options.hotbarKeys[i]);
         }
 
-        // 数字键 0-9
-        for (int i = 0; i <= 9; i++) {
-            keyCodeMap.put(String.valueOf(i), GLFW.GLFW_KEY_0 + i);
+        // 其他常用键（如果有对应的KeyBinding）
+        try {
+            // 尝试添加其他可能的键
+            keyBindingMap.put("C", findKeyBindingByKey(client, GLFW.GLFW_KEY_C));
+            keyBindingMap.put("V", findKeyBindingByKey(client, GLFW.GLFW_KEY_V));
+            keyBindingMap.put("B", findKeyBindingByKey(client, GLFW.GLFW_KEY_B));
+            keyBindingMap.put("N", findKeyBindingByKey(client, GLFW.GLFW_KEY_N));
+            keyBindingMap.put("M", findKeyBindingByKey(client, GLFW.GLFW_KEY_M));
+
+            // 小键盘尝试映射到数字键
+            keyBindingMap.put("Num1", client.options.hotbarKeys[0]);
+            keyBindingMap.put("Num2", client.options.hotbarKeys[1]);
+            keyBindingMap.put("Num3", client.options.hotbarKeys[2]);
+            keyBindingMap.put("Num4", client.options.hotbarKeys[3]);
+            keyBindingMap.put("Num5", client.options.hotbarKeys[4]);
+            keyBindingMap.put("Num6", client.options.hotbarKeys[5]);
+            keyBindingMap.put("Num7", client.options.hotbarKeys[6]);
+            keyBindingMap.put("Num8", client.options.hotbarKeys[7]);
+            keyBindingMap.put("Num9", client.options.hotbarKeys[8]);
+        } catch (Exception e) {
+            // 忽略找不到的KeyBinding
         }
-
-        // 小键盘 Num0-9
-        keyCodeMap.put("Num0", GLFW.GLFW_KEY_KP_0);
-        keyCodeMap.put("Num1", GLFW.GLFW_KEY_KP_1);
-        keyCodeMap.put("Num2", GLFW.GLFW_KEY_KP_2);
-        keyCodeMap.put("Num3", GLFW.GLFW_KEY_KP_3);
-        keyCodeMap.put("Num4", GLFW.GLFW_KEY_KP_4);
-        keyCodeMap.put("Num5", GLFW.GLFW_KEY_KP_5);
-        keyCodeMap.put("Num6", GLFW.GLFW_KEY_KP_6);
-        keyCodeMap.put("Num7", GLFW.GLFW_KEY_KP_7);
-        keyCodeMap.put("Num8", GLFW.GLFW_KEY_KP_8);
-        keyCodeMap.put("Num9", GLFW.GLFW_KEY_KP_9);
-
-        // 其他常用键
-        keyCodeMap.put("Alt", GLFW.GLFW_KEY_LEFT_ALT);
 
         initialized = true;
+    }
+
+    private KeyBinding findKeyBindingByKey(MinecraftClient client, int keyCode) {
+        // 遍历所有KeyBinding，找到对应keyCode的
+        for (KeyBinding kb : client.options.allKeys) {
+            if (kb.matchesKey(keyCode, 0)) {
+                return kb;
+            }
+        }
+        return null;
     }
 
     public void tick(MinecraftClient client) {
@@ -75,7 +88,6 @@ public class AutoKeySystem {
             return;
         }
 
-        // 延迟初始化
         if (!initialized) {
             initializeKeyMaps(client);
         }
@@ -92,7 +104,6 @@ public class AutoKeySystem {
     }
 
     private void processTask(KeyPressTask task, long currentTime, MinecraftClient client) {
-        // 初始化
         if (task.lastCycleTime == 0) {
             task.lastCycleTime = currentTime;
             task.currentPressCount = 0;
@@ -120,71 +131,59 @@ public class AutoKeySystem {
             }
         }
 
-        // 处理按键
+        // 处理按键 - 持续保持按下状态直到时间到
         if (task.isHolding) {
+            // 持续按住
+            pressKey(task.keyName);
+
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKey(task.keyName, client);
+                // 时间到，释放
+                releaseKey(task.keyName);
                 task.isHolding = false;
                 task.currentPressCount++;
             }
         } else {
+            // 检查是否该开始新的按键
             if (task.currentPressCount == 0) {
-                pressKey(task.keyName, client);
+                // 第一次按键
+                pressKey(task.keyName);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
-                pressKey(task.keyName, client);
+                // 间隔时间到，开始下一次按键
+                pressKey(task.keyName);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             }
         }
     }
 
-    private void pressKey(String keyName, MinecraftClient client) {
-        if (!initialized) {
+    private void pressKey(String keyName) {
+        if (!initialized || keyBindingMap == null) {
             return;
         }
 
-        // 优先使用KeyBinding
         KeyBinding keyBinding = keyBindingMap.get(keyName);
         if (keyBinding != null) {
             keyBinding.setPressed(true);
-            return;
-        }
-
-        // 否则使用keyCode
-        Integer keyCode = keyCodeMap.get(keyName);
-        if (keyCode != null) {
-            InputUtil.Key key = InputUtil.fromKeyCode(keyCode, 0);
-            KeyBinding.setKeyPressed(key, true);
-            KeyBinding.onKeyPressed(key);
         }
     }
 
-    private void releaseKey(String keyName, MinecraftClient client) {
-        if (!initialized) {
+    private void releaseKey(String keyName) {
+        if (!initialized || keyBindingMap == null) {
             return;
         }
 
-        // 优先使用KeyBinding
         KeyBinding keyBinding = keyBindingMap.get(keyName);
         if (keyBinding != null) {
             keyBinding.setPressed(false);
-            return;
-        }
-
-        // 否则使用keyCode
-        Integer keyCode = keyCodeMap.get(keyName);
-        if (keyCode != null) {
-            InputUtil.Key key = InputUtil.fromKeyCode(keyCode, 0);
-            KeyBinding.setKeyPressed(key, false);
         }
     }
 
     public boolean isValidKey(String keyName) {
         if (!initialized) {
-            return true; // 未初始化时假定有效
+            return true;
         }
-        return keyBindingMap.containsKey(keyName) || keyCodeMap.containsKey(keyName);
+        return keyBindingMap != null && keyBindingMap.containsKey(keyName);
     }
 }
