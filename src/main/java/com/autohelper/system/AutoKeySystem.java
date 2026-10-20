@@ -3,8 +3,6 @@ package com.autohelper.system;
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -66,30 +64,49 @@ public class AutoKeySystem {
         }
     }
 
+    /**
+     * 处理任务逻辑：
+     * 1. 执行N次按键（每次按holdDuration毫秒，间隔keyInterval毫秒）
+     * 2. 完成一轮后等待cycleInterval毫秒
+     * 3. 开始下一轮
+     */
     private void processTask(KeyPressTask task, long currentTime, MinecraftClient client) {
-        // Check if cycle should start
-        if (task.lastCycleTime == 0 ||
-            currentTime - task.lastCycleTime >= task.cycleInterval) {
-
-            if (task.currentPressCount == 0) {
-                task.lastCycleTime = currentTime;
-            }
+        // 初始化
+        if (task.lastCycleTime == 0) {
+            task.lastCycleTime = currentTime;
+            task.currentPressCount = 0;
+            task.isHolding = false;
         }
 
-        // Process key holding
+        // 检查是否完成一轮，在等待循环间隔
+        if (task.currentPressCount >= task.pressCount) {
+            if (currentTime - task.lastCycleTime >= task.cycleInterval) {
+                // 开始新一轮
+                task.currentPressCount = 0;
+                task.lastCycleTime = currentTime;
+                task.isHolding = false;
+            }
+            return;
+        }
+
+        // 处理按键
         if (task.isHolding) {
+            // 正在按住
             if (currentTime - task.pressStartTime >= task.holdDuration) {
+                // 按住时间到，释放
                 releaseKey(task.keyName, client);
                 task.isHolding = false;
                 task.currentPressCount++;
-
-                if (task.currentPressCount >= task.pressCount) {
-                    task.currentPressCount = 0;
-                }
             }
-        } else if (task.currentPressCount < task.pressCount) {
-            if (task.currentPressCount == 0 ||
-                currentTime - task.pressStartTime >= task.keyInterval) {
+        } else {
+            // 检查是否该按下一次
+            if (task.currentPressCount == 0) {
+                // 第一次按键，立即执行
+                pressKey(task.keyName, client);
+                task.pressStartTime = currentTime;
+                task.isHolding = true;
+            } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
+                // 等待间隔后按下一次
                 pressKey(task.keyName, client);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
@@ -103,9 +120,16 @@ public class AutoKeySystem {
             return;
         }
 
-        long handle = client.getWindow().getHandle();
-        GLFW.glfwSetKeyCallback(handle, (window, key, scancode, action, mods) -> {});
-        KeyBinding.setKeyPressed(InputUtil.fromKeyCode(keyCode, 0), true);
+        long windowHandle = client.getWindow().getHandle();
+
+        // 使用keyboard事件模拟按键
+        try {
+            client.execute(() -> {
+                client.keyboard.onKey(windowHandle, keyCode, 0, GLFW.GLFW_PRESS, 0);
+            });
+        } catch (Exception e) {
+            // 忽略错误
+        }
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
@@ -114,13 +138,18 @@ public class AutoKeySystem {
             return;
         }
 
-        KeyBinding.setKeyPressed(InputUtil.fromKeyCode(keyCode, 0), false);
+        long windowHandle = client.getWindow().getHandle();
+
+        try {
+            client.execute(() -> {
+                client.keyboard.onKey(windowHandle, keyCode, 0, GLFW.GLFW_RELEASE, 0);
+            });
+        } catch (Exception e) {
+            // 忽略错误
+        }
     }
 
     public boolean isValidKey(String keyName) {
         return keyCodeMap.containsKey(keyName);
     }
 }
-
-
-

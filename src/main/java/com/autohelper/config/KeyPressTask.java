@@ -1,6 +1,7 @@
 package com.autohelper.config;
 
 public class KeyPressTask {
+    public String nickname;          // User-defined display name
     public String keyName;           // Key name like "Q", "Num8", "S"
     public int cycleInterval;        // Milliseconds between cycles
     public int keyInterval;          // Milliseconds between key presses
@@ -16,6 +17,7 @@ public class KeyPressTask {
 
     public KeyPressTask() {
         this.enabled = true;
+        this.nickname = "";
     }
 
     public KeyPressTask(String keyName, int cycleInterval, int keyInterval,
@@ -26,6 +28,7 @@ public class KeyPressTask {
         this.holdDuration = holdDuration;
         this.pressCount = pressCount;
         this.enabled = true;
+        this.nickname = "";
     }
 
     public void reset() {
@@ -34,5 +37,13 @@ public class KeyPressTask {
         pressStartTime = 0;
         isHolding = false;
     }
+
+    public String getDisplayName() {
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            return nickname;
+        }
+        return keyName;
+    }
 }
+
 

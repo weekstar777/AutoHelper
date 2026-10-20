@@ -190,13 +190,33 @@ public class ConfigScreen extends Screen {
         KeyPressTask task = entry.task;
         int centerX = this.width / 2;
 
-        String info = Text.translatable("gui.autohelper.task.info",
-            task.keyName, task.cycleInterval, task.keyInterval,
-            task.holdDuration, task.pressCount).getString();
+        // 获取显示名称（昵称或按键名）
+        String displayText = task.getDisplayName();
 
-        int color = task.enabled ? 0x00FF00 : 0xFF0000;
-        context.drawTextWithShadow(this.textRenderer, info,
-            centerX - 95, y + 6, color);
+        // 计算文字宽度
+        int textWidth = this.textRenderer.getWidth(displayText);
+
+        // 文字框的位置和尺寸
+        int boxX = centerX - 95;
+        int boxY = y + 2;
+        int boxWidth = textWidth + 10;
+        int boxHeight = 16;
+
+        // 绘制背景框
+        int bgColor = task.enabled ? 0x80404040 : 0x80202020;
+        context.fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, bgColor);
+
+        // 绘制边框
+        int borderColor = task.enabled ? 0xFF00AA00 : 0xFF555555;
+        context.fill(boxX, boxY, boxX + boxWidth, boxY + 1, borderColor);  // 上
+        context.fill(boxX, boxY + boxHeight - 1, boxX + boxWidth, boxY + boxHeight, borderColor);  // 下
+        context.fill(boxX, boxY, boxX + 1, boxY + boxHeight, borderColor);  // 左
+        context.fill(boxX + boxWidth - 1, boxY, boxX + boxWidth, boxY + boxHeight, borderColor);  // 右
+
+        // 绘制文字
+        int textColor = task.enabled ? 0xFFFFFF : 0x888888;
+        context.drawTextWithShadow(this.textRenderer, displayText,
+            boxX + 5, boxY + 4, textColor);
     }
 
     @Override
