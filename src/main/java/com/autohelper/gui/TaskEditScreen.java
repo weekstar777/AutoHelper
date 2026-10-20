@@ -150,8 +150,8 @@ public class TaskEditScreen extends Screen {
             int holdDuration = Integer.parseInt(holdDurationField.getText());
             int pressCount = Integer.parseInt(pressCountField.getText());
 
-            // Validation
-            if (cycleInterval < 0 || keyInterval < 0 || holdDuration < 0 || pressCount < 1) {
+            // Validation (pressCount can be 0 for infinite loop)
+            if (cycleInterval < 0 || keyInterval < 0 || holdDuration < 0 || pressCount < 0) {
                 errorMessage = Text.translatable("gui.autohelper.task.error_invalid_number").getString();
                 return;
             }

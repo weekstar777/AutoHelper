@@ -16,7 +16,7 @@
   "gui.autohelper.task.cycle_interval": "循环间隔 (毫秒)",
   "gui.autohelper.task.key_interval": "按键间隔 (毫秒)",
   "gui.autohelper.task.hold_duration": "按住时长 (毫秒)",
-  "gui.autohelper.task.press_count": "按键次数",
+  "gui.autohelper.task.press_count": "按键次数 (0=无限)",
   "gui.autohelper.task.save": "保存",
   "gui.autohelper.task.cancel": "取消",
   "gui.autohelper.task.delete": "删除",

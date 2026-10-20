@@ -3,6 +3,8 @@ package com.autohelper.system;
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -66,9 +68,8 @@ public class AutoKeySystem {
 
     /**
      * 处理任务逻辑：
-     * 1. 执行N次按键（每次按holdDuration毫秒，间隔keyInterval毫秒）
-     * 2. 完成一轮后等待cycleInterval毫秒
-     * 3. 开始下一轮
+     * - pressCount = 0: 无限循环
+     * - pressCount > 0: 执行N次后等待循环间隔
      */
     private void processTask(KeyPressTask task, long currentTime, MinecraftClient client) {
         // 初始化
@@ -78,8 +79,8 @@ public class AutoKeySystem {
             task.isHolding = false;
         }
 
-        // 检查是否完成一轮，在等待循环间隔
-        if (task.currentPressCount >= task.pressCount) {
+        // 检查是否完成一轮（仅当pressCount > 0时）
+        if (task.pressCount > 0 && task.currentPressCount >= task.pressCount) {
             if (currentTime - task.lastCycleTime >= task.cycleInterval) {
                 // 开始新一轮
                 task.currentPressCount = 0;
@@ -87,6 +88,18 @@ public class AutoKeySystem {
                 task.isHolding = false;
             }
             return;
+        }
+
+        // pressCount = 0 时，只检查循环间隔
+        if (task.pressCount == 0 && task.currentPressCount > 0) {
+            if (currentTime - task.lastCycleTime >= task.cycleInterval) {
+                // 重置计数，继续循环
+                task.currentPressCount = 0;
+                task.lastCycleTime = currentTime;
+                task.isHolding = false;
+            } else {
+                return;
+            }
         }
 
         // 处理按键
@@ -120,16 +133,10 @@ public class AutoKeySystem {
             return;
         }
 
-        long windowHandle = client.getWindow().getHandle();
-
-        // 使用keyboard事件模拟按键
-        try {
-            client.execute(() -> {
-                client.keyboard.onKey(windowHandle, keyCode, 0, GLFW.GLFW_PRESS, 0);
-            });
-        } catch (Exception e) {
-            // 忽略错误
-        }
+        // 方法1：使用InputUtil设置按键状态
+        InputUtil.Key key = InputUtil.fromKeyCode(keyCode, 0);
+        KeyBinding.setKeyPressed(key, true);
+        KeyBinding.onKeyPressed(key);
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
@@ -138,15 +145,8 @@ public class AutoKeySystem {
             return;
         }
 
-        long windowHandle = client.getWindow().getHandle();
-
-        try {
-            client.execute(() -> {
-                client.keyboard.onKey(windowHandle, keyCode, 0, GLFW.GLFW_RELEASE, 0);
-            });
-        } catch (Exception e) {
-            // 忽略错误
-        }
+        InputUtil.Key key = InputUtil.fromKeyCode(keyCode, 0);
+        KeyBinding.setKeyPressed(key, false);
     }
 
     public boolean isValidKey(String keyName) {
