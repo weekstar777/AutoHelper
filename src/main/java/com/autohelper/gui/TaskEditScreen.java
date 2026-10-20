@@ -22,6 +22,8 @@ public class TaskEditScreen extends Screen {
     private TextFieldWidget pressCountField;
 
     private String errorMessage = null;
+    private int scrollOffset = 0;
+    private static final int CONTENT_HEIGHT = 280;  // 总内容高度
 
     public TaskEditScreen(Screen parent, ConfigManager configManager,
                          KeyPressTask existingTask, int taskIndex) {
@@ -113,18 +115,17 @@ public class TaskEditScreen extends Screen {
             pressCountField.setText("1");
         }
 
-        // Save button
+        // Save and Cancel buttons - fixed at bottom
         this.addDrawableChild(ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, startY + spacing * 6, 100, 20)
+            .dimensions(centerX - 105, this.height - 30, 100, 20)
             .build());
 
-        // Cancel button
         this.addDrawableChild(ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, startY + spacing * 6, 100, 20)
+            .dimensions(centerX + 5, this.height - 30, 100, 20)
             .build());
     }
 
@@ -175,11 +176,11 @@ public class TaskEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 40;
-        int spacing = 38;  // 与init中一致
-        int labelOffset = -14;  // 增加标签与字段的间距
+        int startY = 40 - scrollOffset;  // 应用滚动偏移
+        int spacing = 38;
+        int labelOffset = -14;
 
-        // Draw labels
+        // Draw labels (with scroll offset)
         context.drawTextWithShadow(this.textRenderer,
             Text.literal("任务昵称 (可选)"),
             centerX - 100, startY + labelOffset, 0xFFFFFF);
@@ -212,11 +213,54 @@ public class TaskEditScreen extends Screen {
         holdDurationField.render(context, mouseX, mouseY, delta);
         pressCountField.render(context, mouseX, mouseY, delta);
 
-        // Draw error message if any
+        // Draw error message if any (with scroll offset)
         if (errorMessage != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
                 centerX, startY + spacing * 6 + 25, 0xFF5555);
         }
+
+        // Draw scroll indicator if content is scrollable
+        int maxScroll = Math.max(0, CONTENT_HEIGHT - this.height + 60);
+        if (maxScroll > 0) {
+            // Draw scrollbar background
+            int scrollbarX = this.width - 8;
+            int scrollbarY = 20;
+            int scrollbarHeight = this.height - 40;
+            context.fill(scrollbarX, scrollbarY, scrollbarX + 6, scrollbarY + scrollbarHeight, 0x80000000);
+
+            // Draw scrollbar thumb
+            float scrollProgress = (float) scrollOffset / maxScroll;
+            int thumbHeight = Math.max(20, scrollbarHeight * (this.height - 60) / CONTENT_HEIGHT);
+            int thumbY = scrollbarY + (int)((scrollbarHeight - thumbHeight) * scrollProgress);
+            context.fill(scrollbarX, thumbY, scrollbarX + 6, thumbY + thumbHeight, 0xFFAAAAAA);
+        }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        int maxScroll = Math.max(0, CONTENT_HEIGHT - this.height + 60);
+        scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 10));
+
+        // Update field positions
+        updateFieldPositions();
+
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    private void updateFieldPositions() {
+        int centerX = this.width / 2;
+        int startY = 40 - scrollOffset;
+        int fieldWidth = 200;
+        int fieldHeight = 20;
+        int spacing = 38;
+
+        // Update all field Y positions
+        if (nicknameField != null) nicknameField.setY(startY);
+        if (keyNameField != null) keyNameField.setY(startY + spacing);
+        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 2);
+        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 3);
+        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 4);
+        if (pressCountField != null) pressCountField.setY(startY + spacing * 5);
     }
 
     @Override
