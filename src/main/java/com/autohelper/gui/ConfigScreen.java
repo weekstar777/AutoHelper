@@ -165,11 +165,6 @@ public class ConfigScreen extends Screen {
 
         serverAddressField.render(context, mouseX, mouseY, delta);
 
-        // Tasks title
-        context.drawCenteredTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.config.tasks_title"),
-            this.width / 2, TASKS_START_Y - 10, 0xFFFFFF);
-
         // Render task entries
         int y = TASKS_START_Y;
         for (TaskEntry entry : taskEntries) {

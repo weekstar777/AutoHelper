@@ -1,17 +1,14 @@
 {
   "key.autohelper.config": "打开自动助手配置",
   "category.autohelper": "自动助手",
-
   "gui.autohelper.config.title": "自动助手配置",
   "gui.autohelper.config.server_address": "服务器地址",
   "gui.autohelper.config.auto_join": "自动连接: %s",
   "gui.autohelper.config.on": "开启",
   "gui.autohelper.config.off": "关闭",
   "gui.autohelper.config.add_task": "添加新任务",
-  "gui.autohelper.config.tasks_title": "自动按键任务",
   "gui.autohelper.config.back": "返回",
-  "gui.autohelper.config.no_tasks": "暂无任务。点击"添加新任务"开始配置。",
-
+  "gui.autohelper.config.no_tasks": "暂无任务。点击添加新任务开始配置。",
   "gui.autohelper.task.add_title": "添加任务",
   "gui.autohelper.task.edit_title": "编辑任务",
   "gui.autohelper.task.key_name": "按键名称",
@@ -28,7 +25,5 @@
   "gui.autohelper.task.enabled": "已启用",
   "gui.autohelper.task.disabled": "已禁用",
   "gui.autohelper.task.error_invalid_number": "数字格式错误！",
-  "gui.autohelper.task.error_empty_key": "按键名称不能为空！",
-
-  "gui.autohelper.task.info": "%s | 循环: %dms, 间隔: %dms, 按住: %dms, 次数: %d"
+  "gui.autohelper.task.error_empty_key": "按键名称不能为空！"
 }
