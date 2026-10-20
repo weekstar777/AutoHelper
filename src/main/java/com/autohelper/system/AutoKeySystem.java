@@ -3,93 +3,18 @@ package com.autohelper.system;
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class AutoKeySystem {
     private final ConfigManager configManager;
-    private Map<String, KeyBinding> keyBindingMap;
-    private boolean initialized = false;
 
     public AutoKeySystem(ConfigManager configManager) {
         this.configManager = configManager;
     }
 
-    private void initializeKeyMaps(MinecraftClient client) {
-        if (initialized || client.options == null) {
-            return;
-        }
-
-        keyBindingMap = new HashMap<>();
-
-        // 游戏控制键
-        keyBindingMap.put("Space", client.options.jumpKey);
-        keyBindingMap.put("W", client.options.forwardKey);
-        keyBindingMap.put("A", client.options.leftKey);
-        keyBindingMap.put("S", client.options.backKey);
-        keyBindingMap.put("D", client.options.rightKey);
-        keyBindingMap.put("Q", client.options.dropKey);
-        keyBindingMap.put("E", client.options.inventoryKey);
-        keyBindingMap.put("Shift", client.options.sneakKey);
-        keyBindingMap.put("Ctrl", client.options.sprintKey);
-        keyBindingMap.put("F", client.options.swapHandsKey);
-
-        // 战斗键
-        keyBindingMap.put("R", client.options.attackKey);
-        keyBindingMap.put("T", client.options.useKey);
-        keyBindingMap.put("G", client.options.pickItemKey);
-
-        // 快捷栏 1-9
-        for (int i = 0; i < 9; i++) {
-            keyBindingMap.put(String.valueOf(i + 1), client.options.hotbarKeys[i]);
-        }
-
-        // 其他常用键（如果有对应的KeyBinding）
-        try {
-            // 尝试添加其他可能的键
-            keyBindingMap.put("C", findKeyBindingByKey(client, GLFW.GLFW_KEY_C));
-            keyBindingMap.put("V", findKeyBindingByKey(client, GLFW.GLFW_KEY_V));
-            keyBindingMap.put("B", findKeyBindingByKey(client, GLFW.GLFW_KEY_B));
-            keyBindingMap.put("N", findKeyBindingByKey(client, GLFW.GLFW_KEY_N));
-            keyBindingMap.put("M", findKeyBindingByKey(client, GLFW.GLFW_KEY_M));
-
-            // 小键盘尝试映射到数字键
-            keyBindingMap.put("Num1", client.options.hotbarKeys[0]);
-            keyBindingMap.put("Num2", client.options.hotbarKeys[1]);
-            keyBindingMap.put("Num3", client.options.hotbarKeys[2]);
-            keyBindingMap.put("Num4", client.options.hotbarKeys[3]);
-            keyBindingMap.put("Num5", client.options.hotbarKeys[4]);
-            keyBindingMap.put("Num6", client.options.hotbarKeys[5]);
-            keyBindingMap.put("Num7", client.options.hotbarKeys[6]);
-            keyBindingMap.put("Num8", client.options.hotbarKeys[7]);
-            keyBindingMap.put("Num9", client.options.hotbarKeys[8]);
-        } catch (Exception e) {
-            // 忽略找不到的KeyBinding
-        }
-
-        initialized = true;
-    }
-
-    private KeyBinding findKeyBindingByKey(MinecraftClient client, int keyCode) {
-        // 遍历所有KeyBinding，找到对应keyCode的
-        for (KeyBinding kb : client.options.allKeys) {
-            if (kb.matchesKey(keyCode, 0)) {
-                return kb;
-            }
-        }
-        return null;
-    }
-
     public void tick(MinecraftClient client) {
         if (client.world == null || client.player == null) {
             return;
-        }
-
-        if (!initialized) {
-            initializeKeyMaps(client);
         }
 
         long currentTime = System.currentTimeMillis();
@@ -120,7 +45,7 @@ public class AutoKeySystem {
             return;
         }
 
-        // pressCount = 0 时的处理
+        // pressCount = 0 时的无限循环处理
         if (task.pressCount == 0 && task.currentPressCount > 0) {
             if (currentTime - task.lastCycleTime >= task.cycleInterval) {
                 task.currentPressCount = 0;
@@ -131,14 +56,12 @@ public class AutoKeySystem {
             }
         }
 
-        // 处理按键 - 持续保持按下状态直到时间到
+        // 处理按键 - 使用真正的输入注入
         if (task.isHolding) {
             // 持续按住
-            pressKey(task.keyName);
-
             if (currentTime - task.pressStartTime >= task.holdDuration) {
                 // 时间到，释放
-                releaseKey(task.keyName);
+                releaseKey(task.keyName, client);
                 task.isHolding = false;
                 task.currentPressCount++;
             }
@@ -146,44 +69,109 @@ public class AutoKeySystem {
             // 检查是否该开始新的按键
             if (task.currentPressCount == 0) {
                 // 第一次按键
-                pressKey(task.keyName);
+                pressKey(task.keyName, client);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
                 // 间隔时间到，开始下一次按键
-                pressKey(task.keyName);
+                pressKey(task.keyName, client);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             }
         }
     }
 
-    private void pressKey(String keyName) {
-        if (!initialized || keyBindingMap == null) {
-            return;
+    private int getKeyCode(String keyName) {
+        // 字母键
+        if (keyName.length() == 1 && keyName.matches("[A-Z]")) {
+            return GLFW.GLFW_KEY_A + (keyName.charAt(0) - 'A');
         }
 
-        KeyBinding keyBinding = keyBindingMap.get(keyName);
-        if (keyBinding != null) {
-            keyBinding.setPressed(true);
+        // 数字键 1-9
+        if (keyName.matches("[1-9]")) {
+            return GLFW.GLFW_KEY_1 + (keyName.charAt(0) - '1');
+        }
+
+        // 数字键 0
+        if (keyName.equals("0")) {
+            return GLFW.GLFW_KEY_0;
+        }
+
+        // 小键盘数字 Num0-9
+        if (keyName.startsWith("Num") && keyName.length() == 4) {
+            char digit = keyName.charAt(3);
+            if (digit >= '0' && digit <= '9') {
+                return GLFW.GLFW_KEY_KP_0 + (digit - '0');
+            }
+        }
+
+        // 特殊键映射
+        switch (keyName) {
+            case "Space": return GLFW.GLFW_KEY_SPACE;
+            case "Enter": return GLFW.GLFW_KEY_ENTER;
+            case "Escape": return GLFW.GLFW_KEY_ESCAPE;
+            case "Tab": return GLFW.GLFW_KEY_TAB;
+            case "Backspace": return GLFW.GLFW_KEY_BACKSPACE;
+            case "Shift": return GLFW.GLFW_KEY_LEFT_SHIFT;
+            case "Ctrl": return GLFW.GLFW_KEY_LEFT_CONTROL;
+            case "Alt": return GLFW.GLFW_KEY_LEFT_ALT;
+            case "CapsLock": return GLFW.GLFW_KEY_CAPS_LOCK;
+
+            // F1-F12
+            case "F1": return GLFW.GLFW_KEY_F1;
+            case "F2": return GLFW.GLFW_KEY_F2;
+            case "F3": return GLFW.GLFW_KEY_F3;
+            case "F4": return GLFW.GLFW_KEY_F4;
+            case "F5": return GLFW.GLFW_KEY_F5;
+            case "F6": return GLFW.GLFW_KEY_F6;
+            case "F7": return GLFW.GLFW_KEY_F7;
+            case "F8": return GLFW.GLFW_KEY_F8;
+            case "F9": return GLFW.GLFW_KEY_F9;
+            case "F10": return GLFW.GLFW_KEY_F10;
+            case "F11": return GLFW.GLFW_KEY_F11;
+            case "F12": return GLFW.GLFW_KEY_F12;
+
+            // 符号键
+            case "-": case "Minus": return GLFW.GLFW_KEY_MINUS;
+            case "=": case "Equal": return GLFW.GLFW_KEY_EQUAL;
+            case "[": return GLFW.GLFW_KEY_LEFT_BRACKET;
+            case "]": return GLFW.GLFW_KEY_RIGHT_BRACKET;
+            case ";": case "Semicolon": return GLFW.GLFW_KEY_SEMICOLON;
+            case "'": case "Apostrophe": return GLFW.GLFW_KEY_APOSTROPHE;
+            case ",": case "Comma": return GLFW.GLFW_KEY_COMMA;
+            case ".": case "Period": return GLFW.GLFW_KEY_PERIOD;
+            case "/": case "Slash": return GLFW.GLFW_KEY_SLASH;
+            case "\\": case "Backslash": return GLFW.GLFW_KEY_BACKSLASH;
+            case "`": case "GraveAccent": return GLFW.GLFW_KEY_GRAVE_ACCENT;
+
+            default: return -1;
         }
     }
 
-    private void releaseKey(String keyName) {
-        if (!initialized || keyBindingMap == null) {
+    private void pressKey(String keyName, MinecraftClient client) {
+        int keyCode = getKeyCode(keyName);
+        if (keyCode == -1) {
             return;
         }
 
-        KeyBinding keyBinding = keyBindingMap.get(keyName);
-        if (keyBinding != null) {
-            keyBinding.setPressed(false);
+        // 使用onKey方法直接模拟按键输入
+        long window = client.getWindow().getHandle();
+        client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_PRESS, 0);
+    }
+
+    private void releaseKey(String keyName, MinecraftClient client) {
+        int keyCode = getKeyCode(keyName);
+        if (keyCode == -1) {
+            return;
         }
+
+        // 释放按键
+        long window = client.getWindow().getHandle();
+        client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_RELEASE, 0);
     }
 
     public boolean isValidKey(String keyName) {
-        if (!initialized) {
-            return true;
-        }
-        return keyBindingMap != null && keyBindingMap.containsKey(keyName);
+        return getKeyCode(keyName) != -1;
     }
 }
+
