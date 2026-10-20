@@ -14,6 +14,7 @@ public class TaskEditScreen extends Screen {
     private final KeyPressTask existingTask;
     private final int taskIndex;
 
+    private TextFieldWidget nicknameField;
     private TextFieldWidget keyNameField;
     private TextFieldWidget cycleIntervalField;
     private TextFieldWidget keyIntervalField;
@@ -35,14 +36,23 @@ public class TaskEditScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int startY = 50;
+        int startY = 40;
         int fieldWidth = 200;
         int fieldHeight = 20;
-        int spacing = 35;
+        int spacing = 30;
+
+        // Nickname field (optional)
+        nicknameField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY, fieldWidth, fieldHeight,
+            Text.literal("Nickname")
+        );
+        nicknameField.setMaxLength(32);
+        nicknameField.setPlaceholder(Text.literal("任务昵称（可选）"));
+        this.addSelectableChild(nicknameField);
 
         // Key name field
         keyNameField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY, fieldWidth, fieldHeight,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing, fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.key_name")
         );
         keyNameField.setMaxLength(64);
@@ -51,7 +61,7 @@ public class TaskEditScreen extends Screen {
 
         // Cycle interval field
         cycleIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 2,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.cycle_interval")
         );
@@ -60,7 +70,7 @@ public class TaskEditScreen extends Screen {
 
         // Key interval field
         keyIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 2,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 3,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.key_interval")
         );
@@ -69,7 +79,7 @@ public class TaskEditScreen extends Screen {
 
         // Hold duration field
         holdDurationField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 3,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 4,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.hold_duration")
         );
@@ -78,7 +88,7 @@ public class TaskEditScreen extends Screen {
 
         // Press count field
         pressCountField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 4,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 5,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.press_count")
         );
@@ -87,6 +97,9 @@ public class TaskEditScreen extends Screen {
 
         // Fill existing values
         if (existingTask != null) {
+            if (existingTask.nickname != null) {
+                nicknameField.setText(existingTask.nickname);
+            }
             keyNameField.setText(existingTask.keyName);
             cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
             keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
@@ -104,14 +117,14 @@ public class TaskEditScreen extends Screen {
         this.addDrawableChild(ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, startY + spacing * 5, 100, 20)
+            .dimensions(centerX - 105, startY + spacing * 6, 100, 20)
             .build());
 
         // Cancel button
         this.addDrawableChild(ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, startY + spacing * 5, 100, 20)
+            .dimensions(centerX + 5, startY + spacing * 6, 100, 20)
             .build());
     }
 
@@ -119,6 +132,7 @@ public class TaskEditScreen extends Screen {
         errorMessage = null;
 
         try {
+            String nickname = nicknameField.getText().trim();
             String keyName = keyNameField.getText().trim();
             if (keyName.isEmpty()) {
                 errorMessage = Text.translatable("gui.autohelper.task.error_empty_key").getString();
@@ -139,6 +153,7 @@ public class TaskEditScreen extends Screen {
             KeyPressTask task = new KeyPressTask(
                 keyName, cycleInterval, keyInterval, holdDuration, pressCount
             );
+            task.nickname = nickname;  // Save nickname
 
             if (existingTask == null) {
                 configManager.addTask(task);
@@ -160,32 +175,37 @@ public class TaskEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 50;
-        int spacing = 35;
+        int startY = 40;
+        int spacing = 30;
         int labelOffset = -12;
 
         // Draw labels
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.key_name"),
+            Text.literal("任务昵称 (可选)"),
             centerX - 100, startY + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.cycle_interval"),
+            Text.translatable("gui.autohelper.task.key_name"),
             centerX - 100, startY + spacing + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.key_interval"),
+            Text.translatable("gui.autohelper.task.cycle_interval"),
             centerX - 100, startY + spacing * 2 + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.hold_duration"),
+            Text.translatable("gui.autohelper.task.key_interval"),
             centerX - 100, startY + spacing * 3 + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.press_count"),
+            Text.translatable("gui.autohelper.task.hold_duration"),
             centerX - 100, startY + spacing * 4 + labelOffset, 0xFFFFFF);
 
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.press_count"),
+            centerX - 100, startY + spacing * 5 + labelOffset, 0xFFFFFF);
+
         // Render fields
+        nicknameField.render(context, mouseX, mouseY, delta);
         keyNameField.render(context, mouseX, mouseY, delta);
         cycleIntervalField.render(context, mouseX, mouseY, delta);
         keyIntervalField.render(context, mouseX, mouseY, delta);
@@ -195,7 +215,7 @@ public class TaskEditScreen extends Screen {
         // Draw error message if any
         if (errorMessage != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
-                centerX, startY + spacing * 5 + 25, 0xFF5555);
+                centerX, startY + spacing * 6 + 25, 0xFF5555);
         }
     }
 
