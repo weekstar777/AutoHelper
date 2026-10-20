@@ -1,4 +1,34 @@
 {
   "key.autohelper.config": "Open AutoHelper Config",
-  "category.autohelper": "AutoHelper"
+  "category.autohelper": "AutoHelper",
+
+  "gui.autohelper.config.title": "AutoHelper Configuration",
+  "gui.autohelper.config.server_address": "Server Address",
+  "gui.autohelper.config.auto_join": "Auto Join: %s",
+  "gui.autohelper.config.on": "ON",
+  "gui.autohelper.config.off": "OFF",
+  "gui.autohelper.config.add_task": "Add New Task",
+  "gui.autohelper.config.tasks_title": "Auto Key Tasks",
+  "gui.autohelper.config.back": "Back",
+  "gui.autohelper.config.no_tasks": "No tasks configured. Click 'Add New Task' to start.",
+
+  "gui.autohelper.task.add_title": "Add Task",
+  "gui.autohelper.task.edit_title": "Edit Task",
+  "gui.autohelper.task.key_name": "Key Name",
+  "gui.autohelper.task.key_name_hint": "e.g. Q, Num8, Space",
+  "gui.autohelper.task.cycle_interval": "Cycle Interval (ms)",
+  "gui.autohelper.task.key_interval": "Key Interval (ms)",
+  "gui.autohelper.task.hold_duration": "Hold Duration (ms)",
+  "gui.autohelper.task.press_count": "Press Count",
+  "gui.autohelper.task.save": "Save",
+  "gui.autohelper.task.cancel": "Cancel",
+  "gui.autohelper.task.delete": "Delete",
+  "gui.autohelper.task.edit": "Edit",
+  "gui.autohelper.task.toggle": "Toggle",
+  "gui.autohelper.task.enabled": "Enabled",
+  "gui.autohelper.task.disabled": "Disabled",
+  "gui.autohelper.task.error_invalid_number": "Invalid number input!",
+  "gui.autohelper.task.error_empty_key": "Key name cannot be empty!",
+
+  "gui.autohelper.task.info": "%s | Cycle: %dms, Interval: %dms, Hold: %dms, Count: %d"
 }

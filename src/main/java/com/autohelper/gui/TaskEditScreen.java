@@ -20,9 +20,12 @@ public class TaskEditScreen extends Screen {
     private TextFieldWidget holdDurationField;
     private TextFieldWidget pressCountField;
 
+    private String errorMessage = null;
+
     public TaskEditScreen(Screen parent, ConfigManager configManager,
                          KeyPressTask existingTask, int taskIndex) {
-        super(Text.literal(existingTask == null ? "Add Task" : "Edit Task"));
+        super(Text.translatable(existingTask == null ?
+            "gui.autohelper.task.add_title" : "gui.autohelper.task.edit_title"));
         this.parent = parent;
         this.configManager = configManager;
         this.existingTask = existingTask;
@@ -32,51 +35,106 @@ public class TaskEditScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int startY = 40;
+        int startY = 50;
+        int fieldWidth = 200;
+        int fieldHeight = 20;
+        int spacing = 35;
 
-        keyNameField = createField(centerX, startY, "Key Name");
-        cycleIntervalField = createField(centerX, startY + 35, "Cycle ms");
-        keyIntervalField = createField(centerX, startY + 70, "Key ms");
-        holdDurationField = createField(centerX, startY + 105, "Hold ms");
-        pressCountField = createField(centerX, startY + 140, "Count");
+        // Key name field
+        keyNameField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY, fieldWidth, fieldHeight,
+            Text.translatable("gui.autohelper.task.key_name")
+        );
+        keyNameField.setMaxLength(64);
+        keyNameField.setPlaceholder(Text.translatable("gui.autohelper.task.key_name_hint"));
+        this.addSelectableChild(keyNameField);
 
+        // Cycle interval field
+        cycleIntervalField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing,
+            fieldWidth, fieldHeight,
+            Text.translatable("gui.autohelper.task.cycle_interval")
+        );
+        cycleIntervalField.setMaxLength(10);
+        this.addSelectableChild(cycleIntervalField);
+
+        // Key interval field
+        keyIntervalField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 2,
+            fieldWidth, fieldHeight,
+            Text.translatable("gui.autohelper.task.key_interval")
+        );
+        keyIntervalField.setMaxLength(10);
+        this.addSelectableChild(keyIntervalField);
+
+        // Hold duration field
+        holdDurationField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 3,
+            fieldWidth, fieldHeight,
+            Text.translatable("gui.autohelper.task.hold_duration")
+        );
+        holdDurationField.setMaxLength(10);
+        this.addSelectableChild(holdDurationField);
+
+        // Press count field
+        pressCountField = new TextFieldWidget(
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 4,
+            fieldWidth, fieldHeight,
+            Text.translatable("gui.autohelper.task.press_count")
+        );
+        pressCountField.setMaxLength(5);
+        this.addSelectableChild(pressCountField);
+
+        // Fill existing values
         if (existingTask != null) {
             keyNameField.setText(existingTask.keyName);
             cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
             keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
             holdDurationField.setText(String.valueOf(existingTask.holdDuration));
             pressCountField.setText(String.valueOf(existingTask.pressCount));
+        } else {
+            // Default values
+            cycleIntervalField.setText("5000");
+            keyIntervalField.setText("0");
+            holdDurationField.setText("100");
+            pressCountField.setText("1");
         }
 
+        // Save button
         this.addDrawableChild(ButtonWidget.builder(
-            Text.literal("Save"),
+            Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, startY + 180, 100, 20)
+            .dimensions(centerX - 105, startY + spacing * 5, 100, 20)
             .build());
 
+        // Cancel button
         this.addDrawableChild(ButtonWidget.builder(
-            Text.literal("Cancel"),
+            Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, startY + 180, 100, 20)
+            .dimensions(centerX + 5, startY + spacing * 5, 100, 20)
             .build());
-    }
-
-    private TextFieldWidget createField(int centerX, int y, String placeholder) {
-        TextFieldWidget field = new TextFieldWidget(
-            this.textRenderer, centerX - 100, y, 200, 20, Text.literal(placeholder)
-        );
-        field.setMaxLength(64);
-        this.addSelectableChild(field);
-        return field;
     }
 
     private void saveTask() {
+        errorMessage = null;
+
         try {
-            String keyName = keyNameField.getText();
+            String keyName = keyNameField.getText().trim();
+            if (keyName.isEmpty()) {
+                errorMessage = Text.translatable("gui.autohelper.task.error_empty_key").getString();
+                return;
+            }
+
             int cycleInterval = Integer.parseInt(cycleIntervalField.getText());
             int keyInterval = Integer.parseInt(keyIntervalField.getText());
             int holdDuration = Integer.parseInt(holdDurationField.getText());
             int pressCount = Integer.parseInt(pressCountField.getText());
+
+            // Validation
+            if (cycleInterval < 0 || keyInterval < 0 || holdDuration < 0 || pressCount < 1) {
+                errorMessage = Text.translatable("gui.autohelper.task.error_invalid_number").getString();
+                return;
+            }
 
             KeyPressTask task = new KeyPressTask(
                 keyName, cycleInterval, keyInterval, holdDuration, pressCount
@@ -90,19 +148,55 @@ public class TaskEditScreen extends Screen {
 
             this.close();
         } catch (NumberFormatException e) {
-            // Invalid input, stay on screen
+            errorMessage = Text.translatable("gui.autohelper.task.error_invalid_number").getString();
         }
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Render background
+        this.renderBackground(context, mouseX, mouseY, delta);
+
         super.render(context, mouseX, mouseY, delta);
 
+        int centerX = this.width / 2;
+        int startY = 50;
+        int spacing = 35;
+        int labelOffset = -12;
+
+        // Draw labels
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.key_name"),
+            centerX - 100, startY + labelOffset, 0xFFFFFF);
+
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.cycle_interval"),
+            centerX - 100, startY + spacing + labelOffset, 0xFFFFFF);
+
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.key_interval"),
+            centerX - 100, startY + spacing * 2 + labelOffset, 0xFFFFFF);
+
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.hold_duration"),
+            centerX - 100, startY + spacing * 3 + labelOffset, 0xFFFFFF);
+
+        context.drawTextWithShadow(this.textRenderer,
+            Text.translatable("gui.autohelper.task.press_count"),
+            centerX - 100, startY + spacing * 4 + labelOffset, 0xFFFFFF);
+
+        // Render fields
         keyNameField.render(context, mouseX, mouseY, delta);
         cycleIntervalField.render(context, mouseX, mouseY, delta);
         keyIntervalField.render(context, mouseX, mouseY, delta);
         holdDurationField.render(context, mouseX, mouseY, delta);
         pressCountField.render(context, mouseX, mouseY, delta);
+
+        // Draw error message if any
+        if (errorMessage != null) {
+            context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
+                centerX, startY + spacing * 5 + 25, 0xFF5555);
+        }
     }
 
     @Override
