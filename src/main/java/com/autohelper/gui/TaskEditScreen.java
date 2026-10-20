@@ -39,7 +39,7 @@ public class TaskEditScreen extends Screen {
         int startY = 40;
         int fieldWidth = 200;
         int fieldHeight = 20;
-        int spacing = 30;
+        int spacing = 38;  // 增加间距
 
         // Nickname field (optional)
         nicknameField = new TextFieldWidget(
@@ -176,8 +176,8 @@ public class TaskEditScreen extends Screen {
 
         int centerX = this.width / 2;
         int startY = 40;
-        int spacing = 30;
-        int labelOffset = -12;
+        int spacing = 38;  // 与init中一致
+        int labelOffset = -14;  // 增加标签与字段的间距
 
         // Draw labels
         context.drawTextWithShadow(this.textRenderer,
