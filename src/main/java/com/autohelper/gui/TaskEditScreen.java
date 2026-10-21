@@ -69,7 +69,7 @@ public class TaskEditScreen extends Screen {
         addRemoveButtons.clear();
 
         int centerX = this.width / 2;
-        int startY = 30;
+        int startY = 40;
         int currentY = startY - (int) scrollOffset;
 
         taskNameField = new TextFieldWidget(
@@ -79,8 +79,9 @@ public class TaskEditScreen extends Screen {
         );
         taskNameField.setMaxLength(50);
         taskNameField.setText(task.nickname != null ? task.nickname : "");
-        this.addSelectableChild(taskNameField);
-        currentY += ROW_HEIGHT + 10;
+        taskNameField.setPlaceholder(Text.of("请输入任务昵称..."));
+        this.addDrawableChild(taskNameField);
+        currentY += ROW_HEIGHT + 15;
 
         currentY += ROW_HEIGHT;
 
@@ -95,7 +96,8 @@ public class TaskEditScreen extends Screen {
             );
             keyField.setMaxLength(20);
             keyField.setText(pair.keyName);
-            this.addSelectableChild(keyField);
+            keyField.setPlaceholder(Text.of("按键（如：R）"));
+            this.addDrawableChild(keyField);
             keyNameFields.add(keyField);
 
             TextFieldWidget cmdField = new TextFieldWidget(
@@ -105,7 +107,8 @@ public class TaskEditScreen extends Screen {
             );
             cmdField.setMaxLength(100);
             cmdField.setText(pair.command);
-            this.addSelectableChild(cmdField);
+            cmdField.setPlaceholder(Text.of("命令（如：/say hello）"));
+            this.addDrawableChild(cmdField);
             commandFields.add(cmdField);
 
             if (i == 0) {
@@ -148,7 +151,7 @@ public class TaskEditScreen extends Screen {
         );
         loopIntervalField.setMaxLength(10);
         loopIntervalField.setText(String.valueOf(task.cycleInterval));
-        this.addSelectableChild(loopIntervalField);
+        this.addDrawableChild(loopIntervalField);
         currentY += ROW_HEIGHT;
 
         keyIntervalField = new TextFieldWidget(
@@ -158,7 +161,7 @@ public class TaskEditScreen extends Screen {
         );
         keyIntervalField.setMaxLength(10);
         keyIntervalField.setText(String.valueOf(task.keyInterval));
-        this.addSelectableChild(keyIntervalField);
+        this.addDrawableChild(keyIntervalField);
         currentY += ROW_HEIGHT;
 
         holdDurationField = new TextFieldWidget(
@@ -168,7 +171,7 @@ public class TaskEditScreen extends Screen {
         );
         holdDurationField.setMaxLength(10);
         holdDurationField.setText(String.valueOf(task.holdDuration));
-        this.addSelectableChild(holdDurationField);
+        this.addDrawableChild(holdDurationField);
         currentY += ROW_HEIGHT;
 
         pressCountField = new TextFieldWidget(
@@ -178,7 +181,7 @@ public class TaskEditScreen extends Screen {
         );
         pressCountField.setMaxLength(10);
         pressCountField.setText(String.valueOf(task.pressCount));
-        this.addSelectableChild(pressCountField);
+        this.addDrawableChild(pressCountField);
         currentY += ROW_HEIGHT + 20;
 
         int buttonY = Math.max(currentY, this.height - 35);
@@ -275,73 +278,36 @@ public class TaskEditScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 30;
+        int startY = 40;
         int currentY = startY - (int) scrollOffset;
+
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+            centerX, 15, LABEL_COLOR);
 
         context.drawTextWithShadow(this.textRenderer, "任务昵称:",
             centerX - 90, currentY - 12, LABEL_COLOR);
-
-        if (taskNameField != null) {
-            taskNameField.setPosition(centerX - 90, currentY);
-            taskNameField.render(context, mouseX, mouseY, delta);
-        }
-        currentY += ROW_HEIGHT + 10;
+        currentY += ROW_HEIGHT + 15;
 
         context.drawTextWithShadow(this.textRenderer, "按键-命令映射:",
             centerX - 90, currentY, LABEL_COLOR);
         currentY += ROW_HEIGHT;
 
-        for (int i = 0; i < keyNameFields.size(); i++) {
-            TextFieldWidget keyField = keyNameFields.get(i);
-            keyField.setPosition(centerX - 90, currentY);
-            keyField.render(context, mouseX, mouseY, delta);
-
-            if (i < commandFields.size()) {
-                TextFieldWidget cmdField = commandFields.get(i);
-                cmdField.setPosition(centerX, currentY);
-                cmdField.render(context, mouseX, mouseY, delta);
-            }
-
-            if (i < addRemoveButtons.size()) {
-                ButtonWidget btn = addRemoveButtons.get(i);
-                btn.setPosition(centerX + 90, currentY);
-            }
-
-            currentY += ROW_HEIGHT;
-        }
-
-        currentY += 10;
+        currentY += (keyNameFields.size() * ROW_HEIGHT) + 10;
 
         context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):",
             centerX - 90, currentY + 5, LABEL_COLOR);
-        if (loopIntervalField != null) {
-            loopIntervalField.setPosition(centerX - 10, currentY);
-            loopIntervalField.render(context, mouseX, mouseY, delta);
-        }
         currentY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):",
             centerX - 90, currentY + 5, LABEL_COLOR);
-        if (keyIntervalField != null) {
-            keyIntervalField.setPosition(centerX - 10, currentY);
-            keyIntervalField.render(context, mouseX, mouseY, delta);
-        }
         currentY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按住时长(ms):",
             centerX - 90, currentY + 5, LABEL_COLOR);
-        if (holdDurationField != null) {
-            holdDurationField.setPosition(centerX - 10, currentY);
-            holdDurationField.render(context, mouseX, mouseY, delta);
-        }
         currentY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键次数:",
             centerX - 90, currentY + 5, LABEL_COLOR);
-        if (pressCountField != null) {
-            pressCountField.setPosition(centerX - 10, currentY);
-            pressCountField.render(context, mouseX, mouseY, delta);
-        }
 
         super.render(context, mouseX, mouseY, delta);
     }
