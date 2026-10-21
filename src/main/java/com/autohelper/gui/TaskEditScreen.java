@@ -46,6 +46,29 @@ public class TaskEditScreen extends Screen {
         this.configManager = configManager;
         this.existingTask = existingTask;
         this.taskIndex = taskIndex;
+
+        // 初始化按键-命令对数据
+        if (existingTask != null) {
+            // 解析已有任务（按键用逗号分隔，命令也用逗号分隔）
+            String[] keys = (existingTask.keyName != null && !existingTask.keyName.isEmpty())
+                ? existingTask.keyName.split(",") : new String[0];
+            String[] cmds = (existingTask.command != null && !existingTask.command.isEmpty())
+                ? existingTask.command.split(",") : new String[0];
+
+            int maxLen = Math.max(keys.length, cmds.length);
+            if (maxLen == 0) {
+                keyCommandPairs.add(new KeyCommandPair());
+            } else {
+                for (int i = 0; i < maxLen; i++) {
+                    String key = i < keys.length ? keys[i].trim() : "";
+                    String cmd = i < cmds.length ? cmds[i].trim() : "";
+                    keyCommandPairs.add(new KeyCommandPair(key, cmd));
+                }
+            }
+        } else {
+            // 新任务，添加一个空对
+            keyCommandPairs.add(new KeyCommandPair());
+        }
     }
 
     @Override
@@ -63,52 +86,30 @@ public class TaskEditScreen extends Screen {
         );
         nicknameField.setMaxLength(32);
         nicknameField.setPlaceholder(Text.literal("任务昵称（可选）"));
-        this.addSelectableChild(nicknameField);
-
-        // 初始化按键-命令对
-        if (existingTask != null) {
-            // 解析已有任务
-            String[] keys = (existingTask.keyName != null && !existingTask.keyName.isEmpty())
-                ? existingTask.keyName.split("") : new String[0];
-            String[] cmds = (existingTask.command != null && !existingTask.command.isEmpty())
-                ? existingTask.command.split(",") : new String[0];
-
-            int maxLen = Math.max(keys.length, cmds.length);
-            if (maxLen == 0) {
-                keyCommandPairs.add(new KeyCommandPair());
-            } else {
-                for (int i = 0; i < maxLen; i++) {
-                    String key = i < keys.length ? keys[i] : "";
-                    String cmd = i < cmds.length ? cmds[i].trim() : "";
-                    keyCommandPairs.add(new KeyCommandPair(key, cmd));
-                }
-            }
-
-            cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
-            keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
-            holdDurationField.setText(String.valueOf(existingTask.holdDuration));
-            pressCountField.setText(String.valueOf(existingTask.pressCount));
-
-            if (existingTask.nickname != null) {
-                nicknameField.setText(existingTask.nickname);
-            }
-        } else {
-            // 新任务，添加一个空对
-            keyCommandPairs.add(new KeyCommandPair());
+        if (existingTask != null && existingTask.nickname != null) {
+            nicknameField.setText(existingTask.nickname);
         }
+        this.addSelectableChild(nicknameField);
 
         // 创建按键-命令对的UI
         int pairStartY = startY + spacing + 20;
         rebuildKeyCommandPairUI(pairStartY);
 
-        // 循环间隔
+        // 配置参数区域
         int configStartY = pairStartY + (keyCommandPairs.size() * PAIR_HEIGHT) + 20;
+
+        // 循环间隔
         cycleIntervalField = new TextFieldWidget(
             this.textRenderer, centerX - fieldWidth / 2, configStartY,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.cycle_interval")
         );
         cycleIntervalField.setMaxLength(10);
+        if (existingTask != null) {
+            cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
+        } else {
+            cycleIntervalField.setText("5000");
+        }
         this.addSelectableChild(cycleIntervalField);
 
         // 按键间隔
@@ -118,6 +119,11 @@ public class TaskEditScreen extends Screen {
             Text.translatable("gui.autohelper.task.key_interval")
         );
         keyIntervalField.setMaxLength(10);
+        if (existingTask != null) {
+            keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
+        } else {
+            keyIntervalField.setText("0");
+        }
         this.addSelectableChild(keyIntervalField);
 
         // 按住时长
@@ -127,6 +133,11 @@ public class TaskEditScreen extends Screen {
             Text.translatable("gui.autohelper.task.hold_duration")
         );
         holdDurationField.setMaxLength(10);
+        if (existingTask != null) {
+            holdDurationField.setText(String.valueOf(existingTask.holdDuration));
+        } else {
+            holdDurationField.setText("100");
+        }
         this.addSelectableChild(holdDurationField);
 
         // 按键次数
@@ -136,15 +147,12 @@ public class TaskEditScreen extends Screen {
             Text.translatable("gui.autohelper.task.press_count")
         );
         pressCountField.setMaxLength(5);
-        this.addSelectableChild(pressCountField);
-
-        // 默认值
-        if (existingTask == null) {
-            cycleIntervalField.setText("5000");
-            keyIntervalField.setText("0");
-            holdDurationField.setText("100");
+        if (existingTask != null) {
+            pressCountField.setText(String.valueOf(existingTask.pressCount));
+        } else {
             pressCountField.setText("1");
         }
+        this.addSelectableChild(pressCountField);
 
         // 保存和取消按钮
         saveButton = ButtonWidget.builder(
@@ -194,7 +202,7 @@ public class TaskEditScreen extends Screen {
                 this.textRenderer, centerX - 150, y, 60, 20,
                 Text.literal("Key")
             );
-            keyField.setMaxLength(10);
+            keyField.setMaxLength(20);
             keyField.setText(pair.keyName);
             keyField.setPlaceholder(Text.literal("按键"));
             this.addSelectableChild(keyField);
@@ -236,16 +244,32 @@ public class TaskEditScreen extends Screen {
     }
 
     private void addKeyCommandPair() {
+        // 保存当前输入的数据
+        saveCurrentInputData();
+        // 添加新对
         keyCommandPairs.add(new KeyCommandPair());
+        // 重建UI
         this.clearChildren();
         this.init();
     }
 
     private void removeKeyCommandPair(int index) {
         if (keyCommandPairs.size() > 1) {
+            // 保存当前输入的数据
+            saveCurrentInputData();
+            // 删除指定对
             keyCommandPairs.remove(index);
+            // 重建UI
             this.clearChildren();
             this.init();
+        }
+    }
+
+    private void saveCurrentInputData() {
+        // 保存当前所有输入框的数据到keyCommandPairs
+        for (int i = 0; i < keyCommandPairs.size() && i < keyNameFields.size(); i++) {
+            keyCommandPairs.get(i).keyName = keyNameFields.get(i).getText();
+            keyCommandPairs.get(i).command = commandFields.get(i).getText();
         }
     }
 
@@ -253,23 +277,23 @@ public class TaskEditScreen extends Screen {
         errorMessage = null;
 
         try {
+            // 保存当前输入数据
+            saveCurrentInputData();
+
             // 收集所有按键-命令对的数据
             StringBuilder keyNameBuilder = new StringBuilder();
             StringBuilder commandBuilder = new StringBuilder();
 
             for (int i = 0; i < keyCommandPairs.size(); i++) {
-                String key = keyNameFields.get(i).getText().trim();
-                String cmd = commandFields.get(i).getText().trim();
+                String key = keyCommandPairs.get(i).keyName.trim();
+                String cmd = keyCommandPairs.get(i).command.trim();
 
                 if (!key.isEmpty() || !cmd.isEmpty()) {
                     if (keyNameBuilder.length() > 0) {
-                        // 按键直接连接，不用分隔符
-                        keyNameBuilder.append(key);
-                        // 命令用逗号分隔
+                        keyNameBuilder.append(",");
                         commandBuilder.append(",");
-                    } else {
-                        keyNameBuilder.append(key);
                     }
+                    keyNameBuilder.append(key);
                     commandBuilder.append(cmd);
                 }
             }

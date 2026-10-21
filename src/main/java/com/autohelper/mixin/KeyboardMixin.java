@@ -48,15 +48,22 @@ public class KeyboardMixin {
 
             // 检查按键是否匹配
             if (task.keyName != null && !task.keyName.isEmpty()) {
-                // 如果是连续按键序列（如 "ABC"），匹配序列中的任一按键
-                String keySequence = task.keyName;
-                boolean isSequence = keySequence.length() > 1 && keySequence.matches("[A-Z]+");
-
                 int keyIndex = -1;
-                if (isSequence) {
-                    // 查找按下的是序列中的第几个键
-                    for (int i = 0; i < keySequence.length(); i++) {
-                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(String.valueOf(keySequence.charAt(i)));
+
+                // 检查是否是逗号分隔的按键列表（如 "A,B,Space"）
+                if (task.keyName.contains(",")) {
+                    String[] keys = task.keyName.split(",");
+                    for (int i = 0; i < keys.length; i++) {
+                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(keys[i].trim());
+                        if (taskKeyCode == key) {
+                            keyIndex = i;
+                            break;
+                        }
+                    }
+                } else if (task.keyName.length() > 1 && task.keyName.matches("[A-Z]+")) {
+                    // 连续字母序列（如 "ABC"）
+                    for (int i = 0; i < task.keyName.length(); i++) {
+                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(String.valueOf(task.keyName.charAt(i)));
                         if (taskKeyCode == key) {
                             keyIndex = i;
                             break;
@@ -64,7 +71,7 @@ public class KeyboardMixin {
                     }
                 } else {
                     // 单个按键匹配
-                    int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(keySequence);
+                    int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(task.keyName);
                     if (taskKeyCode == key) {
                         keyIndex = 0;
                     }

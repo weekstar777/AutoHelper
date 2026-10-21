@@ -87,20 +87,20 @@ install.bat
 按键次数：3
 ```
 
-**场景5：连续按键+多命令（新功能）**
+**场景5：多按键+多命令（新UI）**
 ```
-按键名称：ABC
-命令：/give @s apple,/give @s bread,/give @s cake
-循环间隔：5000ms
+使用新的UI界面配置：
+行1: 按键=A, 命令=/give @s apple 64
+行2: 按键=B, 命令=/give @s bread 64
+行3: 按键=C, 命令=/give @s cake 64
+
+保存后格式：
+按键名称：A,B,C
+命令：/give @s apple 64,/give @s bread 64,/give @s cake 64
+
 效果：
-- 每5秒依次按A、B、C键
-- 按A时执行/give @s apple
-- 按B时执行/give @s bread
-- 按C时执行/give @s cake
-手动触发：
-- 手动按A键 → 获得苹果
-- 手动按B键 → 获得面包
-- 手动按C键 → 获得蛋糕
+- 自动执行：每个周期依次按A、B、C，执行对应命令
+- 手动触发：按A获得苹果，按B获得面包，按C获得蛋糕
 ```
 
 ## 支持的按键

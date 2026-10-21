@@ -186,13 +186,23 @@ public class AutoKeySystem {
     private void pressKey(String keyName, MinecraftClient client, boolean execute) {
         if (!execute || robot == null || keyName == null || keyName.isEmpty()) return;
 
-        // 检查是否是连续按键序列（如 "ABC"）
-        if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
-            // 依次按每个字母键
+        // 检查是否是逗号分隔的按键列表（如 "A,B,Space"）
+        if (keyName.contains(",")) {
+            String[] keys = keyName.split(",");
+            for (String key : keys) {
+                pressSingleKey(key.trim());
+                try {
+                    Thread.sleep(50); // 每个按键间隔50ms
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
+            // 连续字母序列（如 "ABC"）
             for (char c : keyName.toCharArray()) {
                 pressSingleKey(String.valueOf(c));
                 try {
-                    Thread.sleep(50); // 每个按键间隔50ms
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -229,9 +239,25 @@ public class AutoKeySystem {
             commands = command.split(",");
         }
 
-        // 检查是否是连续按键序列（如 "ABC"）
-        if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
-            // 依次释放每个字母键（倒序释放）
+        // 检查是否是逗号分隔的按键列表（如 "A,B,Space"）
+        if (keyName.contains(",")) {
+            String[] keys = keyName.split(",");
+            for (int i = keys.length - 1; i >= 0; i--) {
+                releaseSingleKey(keys[i].trim());
+
+                // 执行对应的命令（如果有）
+                if (commands != null && i < commands.length) {
+                    executeCommand(commands[i].trim(), client);
+                }
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
+            // 连续字母序列（如 "ABC"）
             for (int i = keyName.length() - 1; i >= 0; i--) {
                 releaseSingleKey(String.valueOf(keyName.charAt(i)));
 
@@ -241,7 +267,7 @@ public class AutoKeySystem {
                 }
 
                 try {
-                    Thread.sleep(50); // 每个按键间隔50ms
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
