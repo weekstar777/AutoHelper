@@ -4,8 +4,6 @@ public class KeyPressTask {
     public String nickname;          // User-defined display name
     public String keyName;           // Key name like "Q", "Num8", "S"
     public String command;           // Command to execute (e.g., "/give @s apple 64")
-    public boolean executeKeyPress;  // Whether to simulate key press
-    public boolean executeCommand;   // Whether to execute command
     public int cycleInterval;        // Milliseconds between cycles
     public int keyInterval;          // Milliseconds between key presses
     public int holdDuration;         // Milliseconds to hold key
@@ -22,8 +20,6 @@ public class KeyPressTask {
         this.enabled = true;
         this.nickname = "";
         this.command = "";
-        this.executeKeyPress = true;
-        this.executeCommand = false;
     }
 
     public KeyPressTask(String keyName, int cycleInterval, int keyInterval,
@@ -36,8 +32,6 @@ public class KeyPressTask {
         this.enabled = true;
         this.nickname = "";
         this.command = "";
-        this.executeKeyPress = true;
-        this.executeCommand = false;
     }
 
     public void reset() {
@@ -59,6 +53,16 @@ public class KeyPressTask {
             return command.length() > 20 ? command.substring(0, 20) + "..." : command;
         }
         return "未命名任务";
+    }
+
+    // 辅助方法：判断是否应该执行按键
+    public boolean shouldExecuteKeyPress() {
+        return keyName != null && !keyName.trim().isEmpty();
+    }
+
+    // 辅助方法：判断是否应该执行命令
+    public boolean shouldExecuteCommand() {
+        return command != null && !command.trim().isEmpty();
     }
 }
 

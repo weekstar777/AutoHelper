@@ -61,7 +61,7 @@ public class AutoKeySystem {
                 task.isHolding = false;
             } else {
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    releaseKey(task.keyName, client, task.executeKeyPress);
+                    releaseKey(task.keyName, client, task.shouldExecuteKeyPress());
                     task.isHolding = false;
                 }
                 return;
@@ -70,22 +70,22 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKey(task.keyName, client, task.executeKeyPress);
+                releaseKey(task.keyName, client, task.shouldExecuteKeyPress());
                 task.isHolding = false;
                 task.currentPressCount++;
 
                 // 执行命令（在按键释放时执行一次）
-                if (task.executeCommand && task.command != null && !task.command.trim().isEmpty()) {
+                if (task.shouldExecuteCommand()) {
                     executeCommand(task.command, client);
                 }
             }
         } else {
             if (task.currentPressCount == 0) {
-                pressKey(task.keyName, client, task.executeKeyPress);
+                pressKey(task.keyName, client, task.shouldExecuteKeyPress());
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
-                pressKey(task.keyName, client, task.executeKeyPress);
+                pressKey(task.keyName, client, task.shouldExecuteKeyPress());
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             }

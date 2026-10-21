@@ -16,23 +16,18 @@ public class TaskEditScreen extends Screen {
 
     private TextFieldWidget nicknameField;
     private TextFieldWidget keyNameField;
-    private TextFieldWidget commandField;  // 新增命令输入框
+    private TextFieldWidget commandField;
     private TextFieldWidget cycleIntervalField;
     private TextFieldWidget keyIntervalField;
     private TextFieldWidget holdDurationField;
     private TextFieldWidget pressCountField;
 
-    private ButtonWidget executeKeyPressToggle;  // 执行按键开关
-    private ButtonWidget executeCommandToggle;   // 执行命令开关
     private ButtonWidget saveButton;
     private ButtonWidget cancelButton;
 
     private String errorMessage = null;
     private int scrollOffset = 0;
-    private static final int CONTENT_HEIGHT = 380;  // 增加内容高度以容纳新字段
-
-    private boolean tempExecuteKeyPress = true;  // 临时存储执行按键状态
-    private boolean tempExecuteCommand = false;  // 临时存储执行命令状态
+    private static final int CONTENT_HEIGHT = 300;
 
     public TaskEditScreen(Screen parent, ConfigManager configManager,
                          KeyPressTask existingTask, int taskIndex) {
@@ -80,15 +75,9 @@ public class TaskEditScreen extends Screen {
         commandField.setPlaceholder(Text.literal("命令（如 /give @s apple 64）"));
         this.addSelectableChild(commandField);
 
-        // Execute KeyPress Toggle (新增)
-        updateExecuteKeyPressButton(centerX, startY + spacing * 3);
-
-        // Execute Command Toggle (新增)
-        updateExecuteCommandButton(centerX, startY + spacing * 4);
-
         // Cycle interval field
         cycleIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 5,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 3,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.cycle_interval")
         );
@@ -97,7 +86,7 @@ public class TaskEditScreen extends Screen {
 
         // Key interval field
         keyIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 6,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 4,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.key_interval")
         );
@@ -106,7 +95,7 @@ public class TaskEditScreen extends Screen {
 
         // Hold duration field
         holdDurationField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 7,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 5,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.hold_duration")
         );
@@ -115,7 +104,7 @@ public class TaskEditScreen extends Screen {
 
         // Press count field
         pressCountField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 8,
+            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 6,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.press_count")
         );
@@ -133,8 +122,6 @@ public class TaskEditScreen extends Screen {
             if (existingTask.command != null) {
                 commandField.setText(existingTask.command);
             }
-            tempExecuteKeyPress = existingTask.executeKeyPress;
-            tempExecuteCommand = existingTask.executeCommand;
             cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
             keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
             holdDurationField.setText(String.valueOf(existingTask.holdDuration));
@@ -145,58 +132,22 @@ public class TaskEditScreen extends Screen {
             keyIntervalField.setText("0");
             holdDurationField.setText("100");
             pressCountField.setText("1");
-            tempExecuteKeyPress = true;
-            tempExecuteCommand = false;
         }
 
-        // Save and Cancel buttons - will scroll with content
+        // Save and Cancel buttons
         saveButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, startY + spacing * 9, 100, 20)
+            .dimensions(centerX - 105, startY + spacing * 7, 100, 20)
             .build();
         this.addDrawableChild(saveButton);
 
         cancelButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, startY + spacing * 9, 100, 20)
+            .dimensions(centerX + 5, startY + spacing * 7, 100, 20)
             .build();
         this.addDrawableChild(cancelButton);
-    }
-
-    private void updateExecuteKeyPressButton(int centerX, int y) {
-        if (executeKeyPressToggle != null) {
-            this.remove(executeKeyPressToggle);
-        }
-
-        String statusText = tempExecuteKeyPress ? "§a开启" : "§c关闭";
-        executeKeyPressToggle = ButtonWidget.builder(
-            Text.literal("执行按键: " + statusText),
-            button -> {
-                tempExecuteKeyPress = !tempExecuteKeyPress;
-                updateExecuteKeyPressButton(centerX, y);
-            })
-            .dimensions(centerX - 100, y, 200, 20)
-            .build();
-        this.addDrawableChild(executeKeyPressToggle);
-    }
-
-    private void updateExecuteCommandButton(int centerX, int y) {
-        if (executeCommandToggle != null) {
-            this.remove(executeCommandToggle);
-        }
-
-        String statusText = tempExecuteCommand ? "§a开启" : "§c关闭";
-        executeCommandToggle = ButtonWidget.builder(
-            Text.literal("执行命令: " + statusText),
-            button -> {
-                tempExecuteCommand = !tempExecuteCommand;
-                updateExecuteCommandButton(centerX, y);
-            })
-            .dimensions(centerX - 100, y, 200, 20)
-            .build();
-        this.addDrawableChild(executeCommandToggle);
     }
 
     private void saveTask() {
@@ -229,8 +180,6 @@ public class TaskEditScreen extends Screen {
             );
             task.nickname = nickname;
             task.command = command;
-            task.executeKeyPress = tempExecuteKeyPress;
-            task.executeCommand = tempExecuteCommand;
 
             if (existingTask == null) {
                 configManager.addTask(task);
@@ -269,23 +218,21 @@ public class TaskEditScreen extends Screen {
             Text.literal("命令 (可选)"),
             centerX - 100, startY + spacing * 2 + labelOffset, 0xFFFFFF);
 
-        // spacing * 3 和 * 4 是按钮，不需要标签
-
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.cycle_interval"),
-            centerX - 100, startY + spacing * 5 + labelOffset, 0xFFFFFF);
+            centerX - 100, startY + spacing * 3 + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.key_interval"),
-            centerX - 100, startY + spacing * 6 + labelOffset, 0xFFFFFF);
+            centerX - 100, startY + spacing * 4 + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.hold_duration"),
-            centerX - 100, startY + spacing * 7 + labelOffset, 0xFFFFFF);
+            centerX - 100, startY + spacing * 5 + labelOffset, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.press_count"),
-            centerX - 100, startY + spacing * 8 + labelOffset, 0xFFFFFF);
+            centerX - 100, startY + spacing * 6 + labelOffset, 0xFFFFFF);
 
         // Render fields
         nicknameField.render(context, mouseX, mouseY, delta);
@@ -299,7 +246,7 @@ public class TaskEditScreen extends Screen {
         // Draw error message if any (with scroll offset)
         if (errorMessage != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
-                centerX, startY + spacing * 9 + 25, 0xFF5555);
+                centerX, startY + spacing * 7 + 25, 0xFF5555);
         }
 
         // Draw scroll indicator if content is scrollable
@@ -341,16 +288,14 @@ public class TaskEditScreen extends Screen {
         if (nicknameField != null) nicknameField.setY(startY);
         if (keyNameField != null) keyNameField.setY(startY + spacing);
         if (commandField != null) commandField.setY(startY + spacing * 2);
-        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 5);
-        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 6);
-        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 7);
-        if (pressCountField != null) pressCountField.setY(startY + spacing * 8);
+        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 3);
+        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 4);
+        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 5);
+        if (pressCountField != null) pressCountField.setY(startY + spacing * 6);
 
-        // Update button positions (toggle buttons and save/cancel)
-        if (executeKeyPressToggle != null) executeKeyPressToggle.setY(startY + spacing * 3);
-        if (executeCommandToggle != null) executeCommandToggle.setY(startY + spacing * 4);
-        if (saveButton != null) saveButton.setY(startY + spacing * 9);
-        if (cancelButton != null) cancelButton.setY(startY + spacing * 9);
+        // Update button positions
+        if (saveButton != null) saveButton.setY(startY + spacing * 7);
+        if (cancelButton != null) cancelButton.setY(startY + spacing * 7);
     }
 
     @Override
