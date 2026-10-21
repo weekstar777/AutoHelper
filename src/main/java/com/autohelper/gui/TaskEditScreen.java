@@ -27,8 +27,12 @@ public class TaskEditScreen extends Screen {
     private TextFieldWidget pressCountField;
 
     private List<KeyCommandPair> keyCommandPairs = new ArrayList<>();
-    private double scrollOffset = 0;
-    private static final double SCROLL_SPEED = 20.0;
+    private int scrollOffset = 0;
+    private static final int SCROLL_SPEED = 15;
+
+    private static final int HEADER_HEIGHT = 50;
+    private static final int FOOTER_HEIGHT = 40;
+    private int contentHeight = 0;
 
     public TaskEditScreen(Screen parent, ConfigManager configManager, KeyPressTask task, int taskIndex) {
         super(Text.of(task == null ? "添加新任务" : "编辑任务"));
@@ -38,7 +42,7 @@ public class TaskEditScreen extends Screen {
         this.taskIndex = taskIndex;
         this.isNewTask = (task == null);
 
-        // 初始化数据 - 使用this.task确保访问已初始化的实例
+        // 初始化数据
         if (this.task.keyName != null && !this.task.keyName.isEmpty()) {
             String[] keys = this.task.keyName.split(",");
             String[] commands = this.task.command != null ? this.task.command.split(",") : new String[0];
@@ -63,29 +67,30 @@ public class TaskEditScreen extends Screen {
         commandFields.clear();
 
         int centerX = this.width / 2;
-        int startY = 30;
+        int yPos = HEADER_HEIGHT;
 
         // 任务昵称
-        taskNameField = new TextFieldWidget(this.textRenderer, centerX - 100, startY, 200, 20, Text.of("Task Name"));
+        yPos += 5;
+        taskNameField = new TextFieldWidget(this.textRenderer, centerX - 100, yPos - scrollOffset, 200, 20, Text.of("任务昵称"));
         taskNameField.setMaxLength(50);
         taskNameField.setText(task.nickname);
         this.addDrawableChild(taskNameField);
 
-        int currentY = startY + 35;
+        yPos += 40;
 
         // 按键-命令对区域
         for (int i = 0; i < keyCommandPairs.size(); i++) {
             KeyCommandPair pair = keyCommandPairs.get(i);
 
             // 按键名称输入框
-            TextFieldWidget keyField = new TextFieldWidget(this.textRenderer, centerX - 150, currentY, 80, 20, Text.of("Key"));
+            TextFieldWidget keyField = new TextFieldWidget(this.textRenderer, centerX - 150, yPos - scrollOffset, 80, 20, Text.of("按键"));
             keyField.setMaxLength(30);
             keyField.setText(pair.keyName);
             keyNameFields.add(keyField);
             this.addDrawableChild(keyField);
 
             // 命令输入框
-            TextFieldWidget cmdField = new TextFieldWidget(this.textRenderer, centerX - 60, currentY, 150, 20, Text.of("Command"));
+            TextFieldWidget cmdField = new TextFieldWidget(this.textRenderer, centerX - 60, yPos - scrollOffset, 150, 20, Text.of("命令"));
             cmdField.setMaxLength(100);
             cmdField.setText(pair.command);
             commandFields.add(cmdField);
@@ -93,66 +98,68 @@ public class TaskEditScreen extends Screen {
 
             // 只有第1个对旁边有+按钮
             if (i == 0) {
-                // 第1个对：只有+按钮
                 this.addDrawableChild(ButtonWidget.builder(Text.of("+"), button -> {
                     saveCurrentInputData();
                     keyCommandPairs.add(new KeyCommandPair());
                     rebuildUI();
-                }).dimensions(centerX + 100, currentY, 40, 20).build());
+                }).dimensions(centerX + 100, yPos - scrollOffset, 40, 20).build());
             } else {
-                // 其他对：只有-按钮
                 final int index = i;
                 this.addDrawableChild(ButtonWidget.builder(Text.of("-"), button -> {
                     saveCurrentInputData();
                     keyCommandPairs.remove(index);
                     rebuildUI();
-                }).dimensions(centerX + 100, currentY, 40, 20).build());
+                }).dimensions(centerX + 100, yPos - scrollOffset, 40, 20).build());
             }
 
-            currentY += 25;
+            yPos += 30;
         }
 
-        currentY += 10;
+        yPos += 10;
 
         // 配置参数
-        loopIntervalField = new TextFieldWidget(this.textRenderer, centerX - 100, currentY, 200, 20, Text.of("Loop Interval"));
+        loopIntervalField = new TextFieldWidget(this.textRenderer, centerX - 100, yPos - scrollOffset, 200, 20, Text.of("循环间隔(ms)"));
         loopIntervalField.setMaxLength(10);
         loopIntervalField.setText(String.valueOf(task.cycleInterval));
         this.addDrawableChild(loopIntervalField);
 
-        currentY += 25;
+        yPos += 30;
 
-        keyIntervalField = new TextFieldWidget(this.textRenderer, centerX - 100, currentY, 200, 20, Text.of("Key Interval"));
+        keyIntervalField = new TextFieldWidget(this.textRenderer, centerX - 100, yPos - scrollOffset, 200, 20, Text.of("按键间隔(ms)"));
         keyIntervalField.setMaxLength(10);
         keyIntervalField.setText(String.valueOf(task.keyInterval));
         this.addDrawableChild(keyIntervalField);
 
-        currentY += 25;
+        yPos += 30;
 
-        holdDurationField = new TextFieldWidget(this.textRenderer, centerX - 100, currentY, 200, 20, Text.of("Hold Duration"));
+        holdDurationField = new TextFieldWidget(this.textRenderer, centerX - 100, yPos - scrollOffset, 200, 20, Text.of("按住时长(ms)"));
         holdDurationField.setMaxLength(10);
         holdDurationField.setText(String.valueOf(task.holdDuration));
         this.addDrawableChild(holdDurationField);
 
-        currentY += 25;
+        yPos += 30;
 
-        pressCountField = new TextFieldWidget(this.textRenderer, centerX - 100, currentY, 200, 20, Text.of("Press Count"));
+        pressCountField = new TextFieldWidget(this.textRenderer, centerX - 100, yPos - scrollOffset, 200, 20, Text.of("按键次数"));
         pressCountField.setMaxLength(10);
         pressCountField.setText(String.valueOf(task.pressCount));
         this.addDrawableChild(pressCountField);
 
-        currentY += 35;
+        yPos += 30;
 
-        // 保存和取消按钮
+        // 记录内容总高度
+        contentHeight = yPos;
+
+        // 底部按钮 - 固定位置，不受滚动影响
+        int bottomY = this.height - 30;
         this.addDrawableChild(ButtonWidget.builder(Text.of("保存"), button -> {
             if (saveTask()) {
                 this.client.setScreen(parent);
             }
-        }).dimensions(centerX - 105, currentY, 100, 20).build());
+        }).dimensions(centerX - 105, bottomY, 100, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("取消"), button -> {
             this.client.setScreen(parent);
-        }).dimensions(centerX + 5, currentY, 100, 20).build());
+        }).dimensions(centerX + 5, bottomY, 100, 20).build());
     }
 
     private void saveCurrentInputData() {
@@ -224,62 +231,64 @@ public class TaskEditScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // 渲染背景
         this.renderBackground(context, mouseX, mouseY, delta);
 
+        // 渲染固定的标题
         int centerX = this.width / 2;
-        int startY = 30;
-
-        // 应用滚动偏移
-        context.getMatrices().push();
-        context.getMatrices().translate(0, -scrollOffset, 0);
-
-        // 标题
         context.drawCenteredTextWithShadow(this.textRenderer,
             isNewTask ? "添加新任务" : "编辑任务",
-            centerX, 10, 0xFFFFFF);
+            centerX, 20, 0xFFFFFF);
 
-        // 任务昵称标签（在输入框上方）
-        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 100, startY - 12, 0xFFFFFF);
+        // 渲染可滚动内容区域的标签
+        int yPos = HEADER_HEIGHT + 5;
 
-        int currentY = startY + 35;
+        // 任务昵称标签
+        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 150, yPos + 5 - scrollOffset, 0xFFFFFF);
+        yPos += 40;
 
-        // 按键-命令标签（在区域上方）
-        context.drawTextWithShadow(this.textRenderer, "按键-命令映射:", centerX - 150, currentY - 15, 0xFFFFFF);
+        // 按键-命令标签
+        context.drawTextWithShadow(this.textRenderer, "按键-命令映射:", centerX - 150, yPos - 10 - scrollOffset, 0xFFFFFF);
 
-        // 列标题（在第一行输入框上方）
-        context.drawTextWithShadow(this.textRenderer, "按键", centerX - 150 + 25, currentY - 12, 0xA0A0A0);
-        context.drawTextWithShadow(this.textRenderer, "命令", centerX - 60 + 50, currentY - 12, 0xA0A0A0);
+        for (int i = 0; i < keyCommandPairs.size(); i++) {
+            int labelY = yPos + 5 - scrollOffset;
+            if (labelY > HEADER_HEIGHT && labelY < this.height - FOOTER_HEIGHT) {
+                context.drawTextWithShadow(this.textRenderer, "按键:", centerX - 180, labelY, 0xA0A0A0);
+                context.drawTextWithShadow(this.textRenderer, "命令:", centerX - 90, labelY, 0xA0A0A0);
+            }
+            yPos += 30;
+        }
 
-        // 跳过按键-命令行
-        currentY += keyCommandPairs.size() * 25 + 10;
+        yPos += 10;
 
-        // 配置参数标签（在输入框上方）
-        context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
-        currentY += 25;
+        // 配置参数标签
+        String[] labels = {"循环间隔(ms):", "按键间隔(ms):", "按住时长(ms):", "按键次数:"};
 
-        context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
-        currentY += 25;
+        for (int i = 0; i < 4; i++) {
+            int labelY = yPos + 5 - scrollOffset;
+            if (labelY > HEADER_HEIGHT && labelY < this.height - FOOTER_HEIGHT) {
+                context.drawTextWithShadow(this.textRenderer, labels[i], centerX - 150, labelY, 0xFFFFFF);
+            }
+            yPos += 30;
+        }
 
-        context.drawTextWithShadow(this.textRenderer, "按住时长(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
-        currentY += 25;
-
-        context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 100, currentY - 12, 0xFFFFFF);
-
-        context.getMatrices().pop();
-
+        // 渲染所有子组件（widget）
         super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        scrollOffset -= verticalAmount * SCROLL_SPEED;
+        int oldOffset = scrollOffset;
+        scrollOffset -= (int)(verticalAmount * SCROLL_SPEED);
 
-        // 计算内容总高度
-        int contentHeight = 30 + 35 + (keyCommandPairs.size() * 25) + 10 + (4 * 25) + 35 + 20;
-        double maxScroll = Math.max(0, contentHeight - this.height + 50);
-
-        // 限制滚动范围
+        // 计算最大滚动量
+        int maxScroll = Math.max(0, contentHeight - (this.height - HEADER_HEIGHT - FOOTER_HEIGHT));
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
+
+        // 如果滚动量改变，重建UI以更新widget位置
+        if (scrollOffset != oldOffset) {
+            rebuildUI();
+        }
 
         return true;
     }
