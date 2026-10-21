@@ -33,6 +33,7 @@ public class AutoKeySystem {
             task.lastCycleTime = currentTime;
             task.currentPressCount = 0;
             task.isHolding = false;
+            task.pressStartTime = 0;
         }
 
         // 检查是否完成一轮
@@ -52,19 +53,25 @@ public class AutoKeySystem {
                 task.lastCycleTime = currentTime;
                 task.isHolding = false;
             } else {
+                // 仍在等待下一循环，但需要检查是否需要释放当前按键
+                if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
+                    releaseKey(task.keyName, client);
+                    task.isHolding = false;
+                }
                 return;
             }
         }
 
-        // 处理按键 - 使用真正的输入注入
+        // 处理按键 - 只在状态变化时触发事件
         if (task.isHolding) {
-            // 持续按住
+            // 检查是否需要释放
             if (currentTime - task.pressStartTime >= task.holdDuration) {
                 // 时间到，释放
                 releaseKey(task.keyName, client);
                 task.isHolding = false;
                 task.currentPressCount++;
             }
+            // 按住期间不重复触发事件
         } else {
             // 检查是否该开始新的按键
             if (task.currentPressCount == 0) {
@@ -156,7 +163,12 @@ public class AutoKeySystem {
 
         // 使用onKey方法直接模拟按键输入
         long window = client.getWindow().getHandle();
+
+        // 先发送PRESS事件
         client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_PRESS, 0);
+
+        // 立即发送一个REPEAT事件，确保被MacroKeybinds检测到
+        client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_REPEAT, 0);
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
