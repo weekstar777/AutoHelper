@@ -73,17 +73,42 @@ public class AutoKeySystem {
                 releaseKey(task.keyName, client);
                 task.isHolding = false;
                 task.currentPressCount++;
+
+                // 执行命令（在按键释放时执行一次）
+                if (task.executeCommand && task.command != null && !task.command.trim().isEmpty()) {
+                    executeCommand(task.command, client);
+                }
             }
         } else {
             if (task.currentPressCount == 0) {
-                pressKey(task.keyName, client);
+                pressKey(task.keyName, client, task.executeKeyPress);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
-                pressKey(task.keyName, client);
+                pressKey(task.keyName, client, task.executeKeyPress);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             }
+        }
+    }
+
+    private void executeCommand(String command, MinecraftClient client) {
+        if (client.player == null || client.player.networkHandler == null) {
+            return;
+        }
+
+        try {
+            String cmd = command.trim();
+            // 移除开头的斜杠（如果有）
+            if (cmd.startsWith("/")) {
+                cmd = cmd.substring(1);
+            }
+
+            // 执行命令
+            client.player.networkHandler.sendCommand(cmd);
+            System.out.println("[AutoHelper] Executed command: /" + cmd);
+        } catch (Exception e) {
+            System.err.println("[AutoHelper] Failed to execute command: " + e.getMessage());
         }
     }
 
@@ -155,8 +180,8 @@ public class AutoKeySystem {
         }
     }
 
-    private void pressKey(String keyName, MinecraftClient client) {
-        if (robot == null) return;
+    private void pressKey(String keyName, MinecraftClient client, boolean execute) {
+        if (!execute || robot == null) return;
 
         int keyCode = getKeyCode(keyName);
         if (keyCode == -1) return;
