@@ -239,7 +239,7 @@ public class TaskEditScreen extends Screen {
             centerX, 10, 0xFFFFFF);
 
         // 任务昵称标签
-        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 150, startY + 5, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 150, startY - 12, 0xFFFFFF);
 
         int currentY = startY + 35;
 
@@ -247,24 +247,24 @@ public class TaskEditScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, "按键-命令映射:", centerX - 150, currentY - 15, 0xFFFFFF);
 
         for (int i = 0; i < keyCommandPairs.size(); i++) {
-            context.drawTextWithShadow(this.textRenderer, "按键:", centerX - 150, currentY + 5, 0xA0A0A0);
-            context.drawTextWithShadow(this.textRenderer, "命令:", centerX - 60, currentY + 5, 0xA0A0A0);
+            context.drawTextWithShadow(this.textRenderer, "按键:", centerX - 150, currentY - 12, 0xA0A0A0);
+            context.drawTextWithShadow(this.textRenderer, "命令:", centerX - 60, currentY - 12, 0xA0A0A0);
             currentY += 25;
         }
 
         currentY += 10;
 
         // 配置参数标签
-        context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):", centerX - 150, currentY + 5, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):", centerX - 150, currentY + 5, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按住时长(ms):", centerX - 150, currentY + 5, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按住时长(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 150, currentY + 5, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 150, currentY - 12, 0xFFFFFF);
 
         context.getMatrices().pop();
 
