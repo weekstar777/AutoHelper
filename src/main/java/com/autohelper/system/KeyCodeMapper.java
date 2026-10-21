@@ -39,14 +39,34 @@ public class KeyCodeMapper {
 
         // 特殊按键
         switch (keyName) {
+            // 基本控制键
             case "Space": return GLFW.GLFW_KEY_SPACE;
             case "Enter": return GLFW.GLFW_KEY_ENTER;
             case "Escape": return GLFW.GLFW_KEY_ESCAPE;
             case "Tab": return GLFW.GLFW_KEY_TAB;
             case "Backspace": return GLFW.GLFW_KEY_BACKSPACE;
+            case "Delete": return GLFW.GLFW_KEY_DELETE;
+            case "Insert": return GLFW.GLFW_KEY_INSERT;
+
+            // 修饰键
             case "Shift": return GLFW.GLFW_KEY_LEFT_SHIFT;
             case "Ctrl": return GLFW.GLFW_KEY_LEFT_CONTROL;
             case "Alt": return GLFW.GLFW_KEY_LEFT_ALT;
+            case "CapsLock": return GLFW.GLFW_KEY_CAPS_LOCK;
+
+            // 方向键
+            case "Up": return GLFW.GLFW_KEY_UP;
+            case "Down": return GLFW.GLFW_KEY_DOWN;
+            case "Left": return GLFW.GLFW_KEY_LEFT;
+            case "Right": return GLFW.GLFW_KEY_RIGHT;
+
+            // 导航键
+            case "Home": return GLFW.GLFW_KEY_HOME;
+            case "End": return GLFW.GLFW_KEY_END;
+            case "PageUp": return GLFW.GLFW_KEY_PAGE_UP;
+            case "PageDown": return GLFW.GLFW_KEY_PAGE_DOWN;
+
+            // 功能键
             case "F1": return GLFW.GLFW_KEY_F1;
             case "F2": return GLFW.GLFW_KEY_F2;
             case "F3": return GLFW.GLFW_KEY_F3;
@@ -59,6 +79,20 @@ public class KeyCodeMapper {
             case "F10": return GLFW.GLFW_KEY_F10;
             case "F11": return GLFW.GLFW_KEY_F11;
             case "F12": return GLFW.GLFW_KEY_F12;
+
+            // 标点符号和特殊字符
+            case ",": case "Comma": return GLFW.GLFW_KEY_COMMA;
+            case ".": case "Period": return GLFW.GLFW_KEY_PERIOD;
+            case "/": case "Slash": return GLFW.GLFW_KEY_SLASH;
+            case ";": case "Semicolon": return GLFW.GLFW_KEY_SEMICOLON;
+            case "'": case "Quote": return GLFW.GLFW_KEY_APOSTROPHE;
+            case "[": case "LeftBracket": return GLFW.GLFW_KEY_LEFT_BRACKET;
+            case "]": case "RightBracket": return GLFW.GLFW_KEY_RIGHT_BRACKET;
+            case "\\": case "Backslash": return GLFW.GLFW_KEY_BACKSLASH;
+            case "-": case "Minus": return GLFW.GLFW_KEY_MINUS;
+            case "=": case "Equal": return GLFW.GLFW_KEY_EQUAL;
+            case "`": case "GraveAccent": return GLFW.GLFW_KEY_GRAVE_ACCENT;
+
             default: return -1;
         }
     }

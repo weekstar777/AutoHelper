@@ -87,13 +87,38 @@ install.bat
 按键次数：3
 ```
 
+**场景5：连续按键（新功能）**
+```
+按键名称：ABC
+命令：（留空）
+循环间隔：5000ms
+效果：每5秒依次按A、B、C键
+```
+
 ## 支持的按键
 
-- 字母：A-Z
+### 基本按键
+- 字母：A-Z（支持连续输入如ABC）
 - 数字：0-9
 - 小键盘：Num0-Num9
-- 功能键：F1-F12
-- 特殊键：Space, Enter, Tab, Shift, Ctrl, Alt, Escape, Backspace
+
+### 功能键
+- F1-F12
+
+### 控制键
+- Space, Enter, Tab, Backspace, Delete, Insert, Escape
+
+### 修饰键
+- Shift, Ctrl, Alt, CapsLock
+
+### 方向键
+- Up, Down, Left, Right
+
+### 导航键
+- Home, End, PageUp, PageDown
+
+### 标点符号
+- , . / ; ' [ ] \ - = `
 
 ## 配置文件
 

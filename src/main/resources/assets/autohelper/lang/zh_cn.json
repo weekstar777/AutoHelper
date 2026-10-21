@@ -12,7 +12,7 @@
   "gui.autohelper.task.add_title": "添加任务",
   "gui.autohelper.task.edit_title": "编辑任务",
   "gui.autohelper.task.key_name": "按键名称",
-  "gui.autohelper.task.key_name_hint": "例如: Q, Num8, Space",
+  "gui.autohelper.task.key_name_hint": "例如: Q, ABC, Num8, Space, Up",
   "gui.autohelper.task.cycle_interval": "循环间隔 (毫秒)",
   "gui.autohelper.task.key_interval": "按键间隔 (毫秒)",
   "gui.autohelper.task.hold_duration": "按住时长 (毫秒)",

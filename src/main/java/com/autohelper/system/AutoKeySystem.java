@@ -130,14 +130,34 @@ public class AutoKeySystem {
         }
 
         switch (keyName) {
+            // 基本控制键
             case "Space": return KeyEvent.VK_SPACE;
             case "Enter": return KeyEvent.VK_ENTER;
             case "Tab": return KeyEvent.VK_TAB;
+            case "Backspace": return KeyEvent.VK_BACK_SPACE;
+            case "Delete": return KeyEvent.VK_DELETE;
+            case "Insert": return KeyEvent.VK_INSERT;
+            case "Escape": return KeyEvent.VK_ESCAPE;
+
+            // 修饰键
             case "Shift": return KeyEvent.VK_SHIFT;
             case "Ctrl": return KeyEvent.VK_CONTROL;
             case "Alt": return KeyEvent.VK_ALT;
-            case "Escape": return KeyEvent.VK_ESCAPE;
-            case "Backspace": return KeyEvent.VK_BACK_SPACE;
+            case "CapsLock": return KeyEvent.VK_CAPS_LOCK;
+
+            // 方向键
+            case "Up": return KeyEvent.VK_UP;
+            case "Down": return KeyEvent.VK_DOWN;
+            case "Left": return KeyEvent.VK_LEFT;
+            case "Right": return KeyEvent.VK_RIGHT;
+
+            // 导航键
+            case "Home": return KeyEvent.VK_HOME;
+            case "End": return KeyEvent.VK_END;
+            case "PageUp": return KeyEvent.VK_PAGE_UP;
+            case "PageDown": return KeyEvent.VK_PAGE_DOWN;
+
+            // 功能键
             case "F1": return KeyEvent.VK_F1;
             case "F2": return KeyEvent.VK_F2;
             case "F3": return KeyEvent.VK_F3;
@@ -150,38 +170,46 @@ public class AutoKeySystem {
             case "F10": return KeyEvent.VK_F10;
             case "F11": return KeyEvent.VK_F11;
             case "F12": return KeyEvent.VK_F12;
-            case "W": return KeyEvent.VK_W;
-            case "A": return KeyEvent.VK_A;
-            case "S": return KeyEvent.VK_S;
-            case "D": return KeyEvent.VK_D;
-            case "Q": return KeyEvent.VK_Q;
-            case "E": return KeyEvent.VK_E;
-            case "R": return KeyEvent.VK_R;
-            case "T": return KeyEvent.VK_T;
-            case "Y": return KeyEvent.VK_Y;
-            case "U": return KeyEvent.VK_U;
-            case "I": return KeyEvent.VK_I;
-            case "O": return KeyEvent.VK_O;
-            case "P": return KeyEvent.VK_P;
-            case "F": return KeyEvent.VK_F;
-            case "G": return KeyEvent.VK_G;
-            case "H": return KeyEvent.VK_H;
-            case "J": return KeyEvent.VK_J;
-            case "K": return KeyEvent.VK_K;
-            case "L": return KeyEvent.VK_L;
-            case "Z": return KeyEvent.VK_Z;
-            case "X": return KeyEvent.VK_X;
-            case "C": return KeyEvent.VK_C;
-            case "V": return KeyEvent.VK_V;
-            case "B": return KeyEvent.VK_B;
-            case "N": return KeyEvent.VK_N;
-            case "M": return KeyEvent.VK_M;
+
+            // 标点符号
+            case ",": case "Comma": return KeyEvent.VK_COMMA;
+            case ".": case "Period": return KeyEvent.VK_PERIOD;
+            case "/": case "Slash": return KeyEvent.VK_SLASH;
+            case ";": case "Semicolon": return KeyEvent.VK_SEMICOLON;
+            case "'": case "Quote": return KeyEvent.VK_QUOTE;
+            case "[": case "LeftBracket": return KeyEvent.VK_OPEN_BRACKET;
+            case "]": case "RightBracket": return KeyEvent.VK_CLOSE_BRACKET;
+            case "\\": case "Backslash": return KeyEvent.VK_BACK_SLASH;
+            case "-": case "Minus": return KeyEvent.VK_MINUS;
+            case "=": case "Equal": return KeyEvent.VK_EQUALS;
+            case "`": case "GraveAccent": return KeyEvent.VK_BACK_QUOTE;
+
             default: return -1;
         }
     }
 
     private void pressKey(String keyName, MinecraftClient client, boolean execute) {
-        if (!execute || robot == null) return;
+        if (!execute || robot == null || keyName == null || keyName.isEmpty()) return;
+
+        // 检查是否是连续按键序列（如 "ABC"）
+        if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
+            // 依次按每个字母键
+            for (char c : keyName.toCharArray()) {
+                pressSingleKey(String.valueOf(c));
+                try {
+                    Thread.sleep(50); // 每个按键间隔50ms
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else {
+            // 单个按键
+            pressSingleKey(keyName);
+        }
+    }
+
+    private void pressSingleKey(String keyName) {
+        if (robot == null) return;
 
         int keyCode = getKeyCode(keyName);
         if (keyCode == -1) return;
@@ -194,7 +222,27 @@ public class AutoKeySystem {
     }
 
     private void releaseKey(String keyName, MinecraftClient client, boolean execute) {
-        if (!execute || robot == null) return;
+        if (!execute || robot == null || keyName == null || keyName.isEmpty()) return;
+
+        // 检查是否是连续按键序列（如 "ABC"）
+        if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
+            // 依次释放每个字母键（倒序释放）
+            for (int i = keyName.length() - 1; i >= 0; i--) {
+                releaseSingleKey(String.valueOf(keyName.charAt(i)));
+                try {
+                    Thread.sleep(50); // 每个按键间隔50ms
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else {
+            // 单个按键
+            releaseSingleKey(keyName);
+        }
+    }
+
+    private void releaseSingleKey(String keyName) {
+        if (robot == null) return;
 
         int keyCode = getKeyCode(keyName);
         if (keyCode == -1) return;

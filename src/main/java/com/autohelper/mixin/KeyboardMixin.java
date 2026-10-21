@@ -48,7 +48,12 @@ public class KeyboardMixin {
 
             // 检查按键是否匹配
             if (task.keyName != null && !task.keyName.isEmpty()) {
-                int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(task.keyName);
+                // 如果是连续按键序列（如 "ABC"），只匹配第一个字母
+                String firstKey = task.keyName.length() > 1 && task.keyName.matches("[A-Z]+")
+                    ? String.valueOf(task.keyName.charAt(0))
+                    : task.keyName;
+
+                int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(firstKey);
                 if (taskKeyCode == key) {
                     // 匹配成功，执行命令
                     executeCommand(task.command, client);
