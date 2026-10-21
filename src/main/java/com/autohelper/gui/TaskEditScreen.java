@@ -340,14 +340,17 @@ public class TaskEditScreen extends Screen {
         // Update all field Y positions
         if (nicknameField != null) nicknameField.setY(startY);
         if (keyNameField != null) keyNameField.setY(startY + spacing);
-        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 2);
-        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 3);
-        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 4);
-        if (pressCountField != null) pressCountField.setY(startY + spacing * 5);
+        if (commandField != null) commandField.setY(startY + spacing * 2);
+        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 5);
+        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 6);
+        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 7);
+        if (pressCountField != null) pressCountField.setY(startY + spacing * 8);
 
-        // Update button positions
-        if (saveButton != null) saveButton.setY(startY + spacing * 6);
-        if (cancelButton != null) cancelButton.setY(startY + spacing * 6);
+        // Update button positions (toggle buttons and save/cancel)
+        if (executeKeyPressToggle != null) executeKeyPressToggle.setY(startY + spacing * 3);
+        if (executeCommandToggle != null) executeCommandToggle.setY(startY + spacing * 4);
+        if (saveButton != null) saveButton.setY(startY + spacing * 9);
+        if (cancelButton != null) cancelButton.setY(startY + spacing * 9);
     }
 
     @Override
