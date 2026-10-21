@@ -61,7 +61,7 @@ public class AutoKeySystem {
                 task.isHolding = false;
             } else {
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    releaseKey(task.keyName, client, task.shouldExecuteKeyPress());
+                    releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                     task.isHolding = false;
                 }
                 return;
@@ -70,14 +70,9 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKey(task.keyName, client, task.shouldExecuteKeyPress());
+                releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                 task.isHolding = false;
                 task.currentPressCount++;
-
-                // 执行命令（在按键释放时执行一次）
-                if (task.shouldExecuteCommand()) {
-                    executeCommand(task.command, client);
-                }
             }
         } else {
             if (task.currentPressCount == 0) {
@@ -222,13 +217,29 @@ public class AutoKeySystem {
     }
 
     private void releaseKey(String keyName, MinecraftClient client, boolean execute) {
-        if (!execute || robot == null || keyName == null || keyName.isEmpty()) return;
+        releaseKeyWithCommand(keyName, null, client, execute, false);
+    }
+
+    private void releaseKeyWithCommand(String keyName, String command, MinecraftClient client, boolean executeKey, boolean executeCmd) {
+        if (!executeKey || robot == null || keyName == null || keyName.isEmpty()) return;
+
+        // 分割命令列表（用逗号分隔）
+        String[] commands = null;
+        if (executeCmd && command != null && !command.trim().isEmpty()) {
+            commands = command.split(",");
+        }
 
         // 检查是否是连续按键序列（如 "ABC"）
         if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
             // 依次释放每个字母键（倒序释放）
             for (int i = keyName.length() - 1; i >= 0; i--) {
                 releaseSingleKey(String.valueOf(keyName.charAt(i)));
+
+                // 执行对应的命令（如果有）
+                if (commands != null && i < commands.length) {
+                    executeCommand(commands[i].trim(), client);
+                }
+
                 try {
                     Thread.sleep(50); // 每个按键间隔50ms
                 } catch (InterruptedException e) {
@@ -238,6 +249,11 @@ public class AutoKeySystem {
         } else {
             // 单个按键
             releaseSingleKey(keyName);
+
+            // 执行命令（单个命令或命令列表的第一个）
+            if (commands != null && commands.length > 0) {
+                executeCommand(commands[0].trim(), client);
+            }
         }
     }
 

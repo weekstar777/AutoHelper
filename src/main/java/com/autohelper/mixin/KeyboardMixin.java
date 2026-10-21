@@ -48,15 +48,31 @@ public class KeyboardMixin {
 
             // 检查按键是否匹配
             if (task.keyName != null && !task.keyName.isEmpty()) {
-                // 如果是连续按键序列（如 "ABC"），只匹配第一个字母
-                String firstKey = task.keyName.length() > 1 && task.keyName.matches("[A-Z]+")
-                    ? String.valueOf(task.keyName.charAt(0))
-                    : task.keyName;
+                // 如果是连续按键序列（如 "ABC"），匹配序列中的任一按键
+                String keySequence = task.keyName;
+                boolean isSequence = keySequence.length() > 1 && keySequence.matches("[A-Z]+");
 
-                int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(firstKey);
-                if (taskKeyCode == key) {
-                    // 匹配成功，执行命令
-                    executeCommand(task.command, client);
+                int keyIndex = -1;
+                if (isSequence) {
+                    // 查找按下的是序列中的第几个键
+                    for (int i = 0; i < keySequence.length(); i++) {
+                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(String.valueOf(keySequence.charAt(i)));
+                        if (taskKeyCode == key) {
+                            keyIndex = i;
+                            break;
+                        }
+                    }
+                } else {
+                    // 单个按键匹配
+                    int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(keySequence);
+                    if (taskKeyCode == key) {
+                        keyIndex = 0;
+                    }
+                }
+
+                if (keyIndex != -1) {
+                    // 匹配成功，执行对应的命令
+                    executeCommandByIndex(task.command, keyIndex, client);
                     // 只触发第一个匹配的任务
                     break;
                 }
@@ -64,13 +80,24 @@ public class KeyboardMixin {
         }
     }
 
-    private void executeCommand(String command, MinecraftClient client) {
+    private void executeCommandByIndex(String command, int index, MinecraftClient client) {
         if (command == null || command.trim().isEmpty()) {
             return;
         }
 
         try {
-            String cmd = command.trim();
+            // 分割命令列表（用逗号分隔）
+            String[] commands = command.split(",");
+
+            // 获取对应索引的命令
+            String cmd;
+            if (index < commands.length) {
+                cmd = commands[index].trim();
+            } else {
+                // 如果索引超出命令数量，使用最后一个命令
+                cmd = commands[commands.length - 1].trim();
+            }
+
             // 移除开头的斜杠（如果有）
             if (cmd.startsWith("/")) {
                 cmd = cmd.substring(1);
@@ -78,9 +105,13 @@ public class KeyboardMixin {
 
             // 执行命令
             client.player.networkHandler.sendCommand(cmd);
-            System.out.println("[AutoHelper] Manual trigger: /" + cmd);
+            System.out.println("[AutoHelper] Manual trigger[" + index + "]: /" + cmd);
         } catch (Exception e) {
             System.err.println("[AutoHelper] Failed to execute manual command: " + e.getMessage());
         }
+    }
+
+    private void executeCommand(String command, MinecraftClient client) {
+        executeCommandByIndex(command, 0, client);
     }
 }
