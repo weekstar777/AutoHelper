@@ -238,33 +238,32 @@ public class TaskEditScreen extends Screen {
             isNewTask ? "添加新任务" : "编辑任务",
             centerX, 10, 0xFFFFFF);
 
-        // 任务昵称标签
-        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 150, startY - 12, 0xFFFFFF);
+        // 任务昵称标签（在输入框上方）
+        context.drawTextWithShadow(this.textRenderer, "任务昵称:", centerX - 100, startY - 12, 0xFFFFFF);
 
         int currentY = startY + 35;
 
-        // 按键-命令标签
+        // 按键-命令标签（在区域上方）
         context.drawTextWithShadow(this.textRenderer, "按键-命令映射:", centerX - 150, currentY - 15, 0xFFFFFF);
 
-        for (int i = 0; i < keyCommandPairs.size(); i++) {
-            context.drawTextWithShadow(this.textRenderer, "按键:", centerX - 150, currentY - 12, 0xA0A0A0);
-            context.drawTextWithShadow(this.textRenderer, "命令:", centerX - 60, currentY - 12, 0xA0A0A0);
-            currentY += 25;
-        }
+        // 列标题（在第一行输入框上方）
+        context.drawTextWithShadow(this.textRenderer, "按键", centerX - 150 + 25, currentY - 12, 0xA0A0A0);
+        context.drawTextWithShadow(this.textRenderer, "命令", centerX - 60 + 50, currentY - 12, 0xA0A0A0);
 
-        currentY += 10;
+        // 跳过按键-命令行
+        currentY += keyCommandPairs.size() * 25 + 10;
 
-        // 配置参数标签
-        context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
+        // 配置参数标签（在输入框上方）
+        context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按住时长(ms):", centerX - 150, currentY - 12, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按住时长(ms):", centerX - 100, currentY - 12, 0xFFFFFF);
         currentY += 25;
 
-        context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 150, currentY - 12, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 100, currentY - 12, 0xFFFFFF);
 
         context.getMatrices().pop();
 
