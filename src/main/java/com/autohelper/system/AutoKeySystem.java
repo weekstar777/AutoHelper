@@ -61,7 +61,7 @@ public class AutoKeySystem {
                 task.isHolding = false;
             } else {
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    releaseKey(task.keyName, client);
+                    releaseKey(task.keyName, client, task.executeKeyPress);
                     task.isHolding = false;
                 }
                 return;
@@ -70,7 +70,7 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKey(task.keyName, client);
+                releaseKey(task.keyName, client, task.executeKeyPress);
                 task.isHolding = false;
                 task.currentPressCount++;
 
@@ -193,8 +193,8 @@ public class AutoKeySystem {
         }
     }
 
-    private void releaseKey(String keyName, MinecraftClient client) {
-        if (robot == null) return;
+    private void releaseKey(String keyName, MinecraftClient client, boolean execute) {
+        if (!execute || robot == null) return;
 
         int keyCode = getKeyCode(keyName);
         if (keyCode == -1) return;

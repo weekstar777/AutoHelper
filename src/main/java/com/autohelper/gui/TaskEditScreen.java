@@ -127,7 +127,9 @@ public class TaskEditScreen extends Screen {
             if (existingTask.nickname != null) {
                 nicknameField.setText(existingTask.nickname);
             }
-            keyNameField.setText(existingTask.keyName);
+            if (existingTask.keyName != null) {
+                keyNameField.setText(existingTask.keyName);
+            }
             if (existingTask.command != null) {
                 commandField.setText(existingTask.command);
             }

@@ -51,7 +51,14 @@ public class KeyPressTask {
         if (nickname != null && !nickname.trim().isEmpty()) {
             return nickname;
         }
-        return keyName;
+        if (keyName != null && !keyName.trim().isEmpty()) {
+            return keyName;
+        }
+        if (command != null && !command.trim().isEmpty()) {
+            // 截取命令的前20个字符作为显示名
+            return command.length() > 20 ? command.substring(0, 20) + "..." : command;
+        }
+        return "未命名任务";
     }
 }
 
