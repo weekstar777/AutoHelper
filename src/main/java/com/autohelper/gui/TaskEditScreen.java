@@ -34,9 +34,7 @@ public class TaskEditScreen extends Screen {
     private List<ButtonWidget> removeButtons = new ArrayList<>();
 
     private String errorMessage = null;
-    private int scrollOffset = 0;
-    private static final int CONTENT_HEIGHT = 400;
-    private static final int PAIR_HEIGHT = 30;
+    private static final int MAX_VISIBLE_PAIRS = 5; // 最多显示5对
 
     public TaskEditScreen(Screen parent, ConfigManager configManager,
                          KeyPressTask existingTask, int taskIndex) {
@@ -74,14 +72,13 @@ public class TaskEditScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int startY = 40;
-        int fieldWidth = 200;
-        int fieldHeight = 20;
-        int spacing = 30;
+        int startY = 30;
+        int spacing = 25;
+        int currentY = startY;
 
         // 任务昵称
         nicknameField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY, fieldWidth, fieldHeight,
+            this.textRenderer, centerX - 100, currentY, 200, 20,
             Text.literal("Nickname")
         );
         nicknameField.setMaxLength(32);
@@ -91,17 +88,20 @@ public class TaskEditScreen extends Screen {
         }
         this.addSelectableChild(nicknameField);
 
+        currentY += spacing + 10;
+
         // 创建按键-命令对的UI
-        int pairStartY = startY + spacing + 20;
-        rebuildKeyCommandPairUI(pairStartY);
+        rebuildKeyCommandPairUI(centerX, currentY);
+
+        // 更新currentY
+        currentY += Math.min(keyCommandPairs.size(), MAX_VISIBLE_PAIRS) * 25 + 10;
 
         // 配置参数区域
-        int configStartY = pairStartY + (keyCommandPairs.size() * PAIR_HEIGHT) + 20;
+        int configY = currentY;
 
         // 循环间隔
         cycleIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, configStartY,
-            fieldWidth, fieldHeight,
+            this.textRenderer, centerX - 100, configY, 200, 20,
             Text.translatable("gui.autohelper.task.cycle_interval")
         );
         cycleIntervalField.setMaxLength(10);
@@ -114,8 +114,7 @@ public class TaskEditScreen extends Screen {
 
         // 按键间隔
         keyIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing,
-            fieldWidth, fieldHeight,
+            this.textRenderer, centerX - 100, configY + spacing, 200, 20,
             Text.translatable("gui.autohelper.task.key_interval")
         );
         keyIntervalField.setMaxLength(10);
@@ -128,8 +127,7 @@ public class TaskEditScreen extends Screen {
 
         // 按住时长
         holdDurationField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing * 2,
-            fieldWidth, fieldHeight,
+            this.textRenderer, centerX - 100, configY + spacing * 2, 200, 20,
             Text.translatable("gui.autohelper.task.hold_duration")
         );
         holdDurationField.setMaxLength(10);
@@ -142,8 +140,7 @@ public class TaskEditScreen extends Screen {
 
         // 按键次数
         pressCountField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing * 3,
-            fieldWidth, fieldHeight,
+            this.textRenderer, centerX - 100, configY + spacing * 3, 200, 20,
             Text.translatable("gui.autohelper.task.press_count")
         );
         pressCountField.setMaxLength(5);
@@ -155,22 +152,23 @@ public class TaskEditScreen extends Screen {
         this.addSelectableChild(pressCountField);
 
         // 保存和取消按钮
+        int buttonY = configY + spacing * 4;
         saveButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, configStartY + spacing * 4, 100, 20)
+            .dimensions(centerX - 105, buttonY, 100, 20)
             .build();
         this.addDrawableChild(saveButton);
 
         cancelButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, configStartY + spacing * 4, 100, 20)
+            .dimensions(centerX + 5, buttonY, 100, 20)
             .build();
         this.addDrawableChild(cancelButton);
     }
 
-    private void rebuildKeyCommandPairUI(int startY) {
+    private void rebuildKeyCommandPairUI(int centerX, int startY) {
         // 清空旧的UI组件
         for (TextFieldWidget field : keyNameFields) {
             this.remove(field);
@@ -190,12 +188,13 @@ public class TaskEditScreen extends Screen {
         addButtons.clear();
         removeButtons.clear();
 
-        int centerX = this.width / 2;
+        // 限制显示数量
+        int visibleCount = Math.min(keyCommandPairs.size(), MAX_VISIBLE_PAIRS);
 
-        for (int i = 0; i < keyCommandPairs.size(); i++) {
+        for (int i = 0; i < visibleCount; i++) {
             final int index = i;
             KeyCommandPair pair = keyCommandPairs.get(i);
-            int y = startY + (i * PAIR_HEIGHT) - scrollOffset;
+            int y = startY + (i * 25);
 
             // 按键名称输入框 (60px宽)
             TextFieldWidget keyField = new TextFieldWidget(
@@ -219,8 +218,8 @@ public class TaskEditScreen extends Screen {
             this.addSelectableChild(cmdField);
             commandFields.add(cmdField);
 
-            // 添加按钮 (+)
-            if (i == keyCommandPairs.size() - 1) {
+            // 添加按钮 (+) - 只在最后一行且未超过最大数量
+            if (i == visibleCount - 1 && keyCommandPairs.size() < MAX_VISIBLE_PAIRS) {
                 ButtonWidget addBtn = ButtonWidget.builder(
                     Text.literal("+"),
                     button -> addKeyCommandPair())
@@ -244,6 +243,11 @@ public class TaskEditScreen extends Screen {
     }
 
     private void addKeyCommandPair() {
+        if (keyCommandPairs.size() >= MAX_VISIBLE_PAIRS) {
+            errorMessage = "最多只能添加" + MAX_VISIBLE_PAIRS + "个按键-命令对";
+            return;
+        }
+
         // 保存当前输入的数据
         saveCurrentInputData();
         // 添加新对
@@ -340,66 +344,56 @@ public class TaskEditScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
-        super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 40 - scrollOffset;
-        int spacing = 30;
+        int startY = 30;
+        int spacing = 25;
+        int currentY = startY;
 
-        // 绘制标签
+        // 绘制标题
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+            centerX, 10, 0xFFFFFF);
+
+        // 绘制任务昵称标签
         context.drawTextWithShadow(this.textRenderer,
             Text.literal("任务昵称"),
-            centerX - 100, startY - 14, 0xFFFFFF);
+            centerX - 150, currentY + 5, 0xFFFFFF);
+
+        currentY += spacing + 10;
 
         // 按键-命令对区域标签
-        int pairStartY = startY + spacing + 20;
         context.drawTextWithShadow(this.textRenderer,
-            Text.literal("按键-命令映射"),
-            centerX - 150, pairStartY - 20, 0xFFFFFF);
+            Text.literal("按键-命令映射 (最多" + MAX_VISIBLE_PAIRS + "对)"),
+            centerX - 150, currentY - 5, 0xFFFFFF);
+
+        currentY += Math.min(keyCommandPairs.size(), MAX_VISIBLE_PAIRS) * 25 + 10;
 
         // 配置参数标签
-        int configStartY = pairStartY + (keyCommandPairs.size() * PAIR_HEIGHT) + 20;
+        int configY = currentY;
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.cycle_interval"),
-            centerX - 100, configStartY - 14, 0xFFFFFF);
+            centerX - 150, configY + 5, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.key_interval"),
-            centerX - 100, configStartY + spacing - 14, 0xFFFFFF);
+            centerX - 150, configY + spacing + 5, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.hold_duration"),
-            centerX - 100, configStartY + spacing * 2 - 14, 0xFFFFFF);
+            centerX - 150, configY + spacing * 2 + 5, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.press_count"),
-            centerX - 100, configStartY + spacing * 3 - 14, 0xFFFFFF);
+            centerX - 150, configY + spacing * 3 + 5, 0xFFFFFF);
 
-        // 渲染所有字段
-        nicknameField.render(context, mouseX, mouseY, delta);
-        for (TextFieldWidget field : keyNameFields) {
-            field.render(context, mouseX, mouseY, delta);
-        }
-        for (TextFieldWidget field : commandFields) {
-            field.render(context, mouseX, mouseY, delta);
-        }
-        cycleIntervalField.render(context, mouseX, mouseY, delta);
-        keyIntervalField.render(context, mouseX, mouseY, delta);
-        holdDurationField.render(context, mouseX, mouseY, delta);
-        pressCountField.render(context, mouseX, mouseY, delta);
+        // 渲染所有组件
+        super.render(context, mouseX, mouseY, delta);
 
         // 绘制错误消息
         if (errorMessage != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
-                centerX, configStartY + spacing * 4 + 25, 0xFF5555);
+                centerX, configY + spacing * 4 + 25, 0xFF5555);
         }
-    }
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        int maxScroll = Math.max(0, CONTENT_HEIGHT - this.height + 60);
-        scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 10));
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
