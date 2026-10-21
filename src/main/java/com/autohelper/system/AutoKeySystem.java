@@ -3,6 +3,7 @@ package com.autohelper.system;
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class AutoKeySystem {
@@ -161,14 +162,22 @@ public class AutoKeySystem {
             return;
         }
 
-        // 使用onKey方法直接模拟按键输入
         long window = client.getWindow().getHandle();
-
-        // 获取正确的扫描码（MacroKeybinds需要这个）
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
 
-        // 发送PRESS事件
+        // 调用InputUtil来正确触发按键
+        InputUtil.Key key = InputUtil.fromKeyCode(keyCode, scancode);
+
+        // 通过KeyBinding系统触发
         client.keyboard.onKey(window, keyCode, scancode, GLFW.GLFW_PRESS, 0);
+
+        // 同时更新InputUtil的按键状态
+        try {
+            // 调用InputUtil.Key的内部方法标记按键按下
+            key.getClass().getMethod("setPressed", boolean.class).invoke(key, true);
+        } catch (Exception ignored) {
+            // 如果反射失败，至少onKey已经调用了
+        }
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
@@ -177,10 +186,18 @@ public class AutoKeySystem {
             return;
         }
 
-        // 释放按键
         long window = client.getWindow().getHandle();
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
+
+        InputUtil.Key key = InputUtil.fromKeyCode(keyCode, scancode);
+
+        // 释放按键
         client.keyboard.onKey(window, keyCode, scancode, GLFW.GLFW_RELEASE, 0);
+
+        try {
+            key.getClass().getMethod("setPressed", boolean.class).invoke(key, false);
+        } catch (Exception ignored) {
+        }
     }
 
     public boolean isValidKey(String keyName) {
