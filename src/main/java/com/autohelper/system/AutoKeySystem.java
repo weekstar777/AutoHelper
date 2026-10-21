@@ -3,18 +3,89 @@ package com.autohelper.system;
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AutoKeySystem {
     private final ConfigManager configManager;
+    private Map<String, KeyBinding> customKeyBindings;
+    private boolean initialized = false;
 
     public AutoKeySystem(ConfigManager configManager) {
         this.configManager = configManager;
+        this.customKeyBindings = new HashMap<>();
+    }
+
+    private void initializeKeyBindings(MinecraftClient client) {
+        if (initialized) {
+            return;
+        }
+
+        // 扫描所有已注册的KeyBinding，通过keyCode匹配
+        for (int keyCode = GLFW.GLFW_KEY_SPACE; keyCode <= GLFW.GLFW_KEY_LAST; keyCode++) {
+            String keyName = getKeyNameFromCode(keyCode);
+            if (keyName != null) {
+                // 找到绑定到这个keyCode的KeyBinding（包括MacroKeybinds的）
+                for (KeyBinding kb : client.options.allKeys) {
+                    if (kb.matchesKey(keyCode, 0) || kb.matchesKey(keyCode, -1)) {
+                        if (!customKeyBindings.containsKey(keyName)) {
+                            customKeyBindings.put(keyName, kb);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        initialized = true;
+    }
+
+    private String getKeyNameFromCode(int code) {
+        // 字母 A-Z
+        if (code >= GLFW.GLFW_KEY_A && code <= GLFW.GLFW_KEY_Z) {
+            return String.valueOf((char)('A' + (code - GLFW.GLFW_KEY_A)));
+        }
+
+        // 数字 0-9
+        if (code >= GLFW.GLFW_KEY_0 && code <= GLFW.GLFW_KEY_9) {
+            return String.valueOf((char)('0' + (code - GLFW.GLFW_KEY_0)));
+        }
+
+        // 小键盘
+        if (code >= GLFW.GLFW_KEY_KP_0 && code <= GLFW.GLFW_KEY_KP_9) {
+            return "Num" + (code - GLFW.GLFW_KEY_KP_0);
+        }
+
+        // 特殊键
+        switch (code) {
+            case GLFW.GLFW_KEY_SPACE: return "Space";
+            case GLFW.GLFW_KEY_ENTER: return "Enter";
+            case GLFW.GLFW_KEY_F1: return "F1";
+            case GLFW.GLFW_KEY_F2: return "F2";
+            case GLFW.GLFW_KEY_F3: return "F3";
+            case GLFW.GLFW_KEY_F4: return "F4";
+            case GLFW.GLFW_KEY_F5: return "F5";
+            case GLFW.GLFW_KEY_F6: return "F6";
+            case GLFW.GLFW_KEY_F7: return "F7";
+            case GLFW.GLFW_KEY_F8: return "F8";
+            case GLFW.GLFW_KEY_F9: return "F9";
+            case GLFW.GLFW_KEY_F10: return "F10";
+            case GLFW.GLFW_KEY_F11: return "F11";
+            case GLFW.GLFW_KEY_F12: return "F12";
+            default: return null;
+        }
     }
 
     public void tick(MinecraftClient client) {
         if (client.world == null || client.player == null) {
             return;
+        }
+
+        if (!initialized) {
+            initializeKeyBindings(client);
         }
 
         long currentTime = System.currentTimeMillis();
@@ -53,7 +124,6 @@ public class AutoKeySystem {
                 task.lastCycleTime = currentTime;
                 task.isHolding = false;
             } else {
-                // 仍在等待下一循环，但需要检查是否需要释放当前按键
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
                     releaseKey(task.keyName, client);
                     task.isHolding = false;
@@ -62,25 +132,19 @@ public class AutoKeySystem {
             }
         }
 
-        // 处理按键 - 只在状态变化时触发事件
+        // 处理按键
         if (task.isHolding) {
-            // 检查是否需要释放
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                // 时间到，释放
                 releaseKey(task.keyName, client);
                 task.isHolding = false;
                 task.currentPressCount++;
             }
-            // 按住期间不重复触发事件
         } else {
-            // 检查是否该开始新的按键
             if (task.currentPressCount == 0) {
-                // 第一次按键
                 pressKey(task.keyName, client);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
             } else if (currentTime - task.pressStartTime >= task.holdDuration + task.keyInterval) {
-                // 间隔时间到，开始下一次按键
                 pressKey(task.keyName, client);
                 task.pressStartTime = currentTime;
                 task.isHolding = true;
@@ -122,9 +186,6 @@ public class AutoKeySystem {
             case "Shift": return GLFW.GLFW_KEY_LEFT_SHIFT;
             case "Ctrl": return GLFW.GLFW_KEY_LEFT_CONTROL;
             case "Alt": return GLFW.GLFW_KEY_LEFT_ALT;
-            case "CapsLock": return GLFW.GLFW_KEY_CAPS_LOCK;
-
-            // F1-F12
             case "F1": return GLFW.GLFW_KEY_F1;
             case "F2": return GLFW.GLFW_KEY_F2;
             case "F3": return GLFW.GLFW_KEY_F3;
@@ -137,20 +198,6 @@ public class AutoKeySystem {
             case "F10": return GLFW.GLFW_KEY_F10;
             case "F11": return GLFW.GLFW_KEY_F11;
             case "F12": return GLFW.GLFW_KEY_F12;
-
-            // 符号键
-            case "-": case "Minus": return GLFW.GLFW_KEY_MINUS;
-            case "=": case "Equal": return GLFW.GLFW_KEY_EQUAL;
-            case "[": return GLFW.GLFW_KEY_LEFT_BRACKET;
-            case "]": return GLFW.GLFW_KEY_RIGHT_BRACKET;
-            case ";": case "Semicolon": return GLFW.GLFW_KEY_SEMICOLON;
-            case "'": case "Apostrophe": return GLFW.GLFW_KEY_APOSTROPHE;
-            case ",": case "Comma": return GLFW.GLFW_KEY_COMMA;
-            case ".": case "Period": return GLFW.GLFW_KEY_PERIOD;
-            case "/": case "Slash": return GLFW.GLFW_KEY_SLASH;
-            case "\\": case "Backslash": return GLFW.GLFW_KEY_BACKSLASH;
-            case "`": case "GraveAccent": return GLFW.GLFW_KEY_GRAVE_ACCENT;
-
             default: return -1;
         }
     }
@@ -161,13 +208,17 @@ public class AutoKeySystem {
             return;
         }
 
-        // 使用onKey方法直接模拟按键输入
         long window = client.getWindow().getHandle();
 
-        // 先发送PRESS事件
-        client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_PRESS, 0);
+        // 方法1: 触发所有匹配keyCode的KeyBinding（包括MacroKeybinds的）
+        for (KeyBinding kb : client.options.allKeys) {
+            if (kb.matchesKey(keyCode, 0) || kb.matchesKey(keyCode, -1)) {
+                kb.setPressed(true);
+            }
+        }
 
-        // 立即发送一个REPEAT事件，确保被MacroKeybinds检测到
+        // 方法2: 发送底层键盘事件
+        client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_PRESS, 0);
         client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_REPEAT, 0);
     }
 
@@ -177,8 +228,16 @@ public class AutoKeySystem {
             return;
         }
 
-        // 释放按键
         long window = client.getWindow().getHandle();
+
+        // 方法1: 释放所有KeyBinding
+        for (KeyBinding kb : client.options.allKeys) {
+            if (kb.matchesKey(keyCode, 0) || kb.matchesKey(keyCode, -1)) {
+                kb.setPressed(false);
+            }
+        }
+
+        // 方法2: 发送释放事件
         client.keyboard.onKey(window, keyCode, 0, GLFW.GLFW_RELEASE, 0);
     }
 
