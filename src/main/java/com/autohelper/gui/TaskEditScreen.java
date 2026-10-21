@@ -38,10 +38,10 @@ public class TaskEditScreen extends Screen {
         this.taskIndex = taskIndex;
         this.isNewTask = (task == null);
 
-        // 初始化数据
-        if (task.keyName != null && !task.keyName.isEmpty()) {
-            String[] keys = task.keyName.split(",");
-            String[] commands = task.command != null ? task.command.split(",") : new String[0];
+        // 初始化数据 - 使用this.task确保访问已初始化的实例
+        if (this.task.keyName != null && !this.task.keyName.isEmpty()) {
+            String[] keys = this.task.keyName.split(",");
+            String[] commands = this.task.command != null ? this.task.command.split(",") : new String[0];
 
             for (int i = 0; i < keys.length; i++) {
                 KeyCommandPair pair = new KeyCommandPair();
