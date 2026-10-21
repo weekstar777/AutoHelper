@@ -8,6 +8,9 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TaskEditScreen extends Screen {
     private final Screen parent;
     private final ConfigManager configManager;
@@ -15,8 +18,6 @@ public class TaskEditScreen extends Screen {
     private final int taskIndex;
 
     private TextFieldWidget nicknameField;
-    private TextFieldWidget keyNameField;
-    private TextFieldWidget commandField;
     private TextFieldWidget cycleIntervalField;
     private TextFieldWidget keyIntervalField;
     private TextFieldWidget holdDurationField;
@@ -25,9 +26,17 @@ public class TaskEditScreen extends Screen {
     private ButtonWidget saveButton;
     private ButtonWidget cancelButton;
 
+    // 按键-命令对列表
+    private List<KeyCommandPair> keyCommandPairs = new ArrayList<>();
+    private List<TextFieldWidget> keyNameFields = new ArrayList<>();
+    private List<TextFieldWidget> commandFields = new ArrayList<>();
+    private List<ButtonWidget> addButtons = new ArrayList<>();
+    private List<ButtonWidget> removeButtons = new ArrayList<>();
+
     private String errorMessage = null;
     private int scrollOffset = 0;
-    private static final int CONTENT_HEIGHT = 300;
+    private static final int CONTENT_HEIGHT = 400;
+    private static final int PAIR_HEIGHT = 30;
 
     public TaskEditScreen(Screen parent, ConfigManager configManager,
                          KeyPressTask existingTask, int taskIndex) {
@@ -45,9 +54,9 @@ public class TaskEditScreen extends Screen {
         int startY = 40;
         int fieldWidth = 200;
         int fieldHeight = 20;
-        int spacing = 38;  // 增加间距
+        int spacing = 30;
 
-        // Nickname field (optional)
+        // 任务昵称
         nicknameField = new TextFieldWidget(
             this.textRenderer, centerX - fieldWidth / 2, startY, fieldWidth, fieldHeight,
             Text.literal("Nickname")
@@ -56,107 +65,218 @@ public class TaskEditScreen extends Screen {
         nicknameField.setPlaceholder(Text.literal("任务昵称（可选）"));
         this.addSelectableChild(nicknameField);
 
-        // Key name field
-        keyNameField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing, fieldWidth, fieldHeight,
-            Text.translatable("gui.autohelper.task.key_name")
-        );
-        keyNameField.setMaxLength(64);
-        keyNameField.setPlaceholder(Text.translatable("gui.autohelper.task.key_name_hint"));
-        this.addSelectableChild(keyNameField);
+        // 初始化按键-命令对
+        if (existingTask != null) {
+            // 解析已有任务
+            String[] keys = (existingTask.keyName != null && !existingTask.keyName.isEmpty())
+                ? existingTask.keyName.split("") : new String[0];
+            String[] cmds = (existingTask.command != null && !existingTask.command.isEmpty())
+                ? existingTask.command.split(",") : new String[0];
 
-        // Command field (新增)
-        commandField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 2,
-            fieldWidth, fieldHeight,
-            Text.literal("Command")
-        );
-        commandField.setMaxLength(256);
-        commandField.setPlaceholder(Text.literal("命令（如 /give @s apple 64）"));
-        this.addSelectableChild(commandField);
+            int maxLen = Math.max(keys.length, cmds.length);
+            if (maxLen == 0) {
+                keyCommandPairs.add(new KeyCommandPair());
+            } else {
+                for (int i = 0; i < maxLen; i++) {
+                    String key = i < keys.length ? keys[i] : "";
+                    String cmd = i < cmds.length ? cmds[i].trim() : "";
+                    keyCommandPairs.add(new KeyCommandPair(key, cmd));
+                }
+            }
 
-        // Cycle interval field
+            cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
+            keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
+            holdDurationField.setText(String.valueOf(existingTask.holdDuration));
+            pressCountField.setText(String.valueOf(existingTask.pressCount));
+
+            if (existingTask.nickname != null) {
+                nicknameField.setText(existingTask.nickname);
+            }
+        } else {
+            // 新任务，添加一个空对
+            keyCommandPairs.add(new KeyCommandPair());
+        }
+
+        // 创建按键-命令对的UI
+        int pairStartY = startY + spacing + 20;
+        rebuildKeyCommandPairUI(pairStartY);
+
+        // 循环间隔
+        int configStartY = pairStartY + (keyCommandPairs.size() * PAIR_HEIGHT) + 20;
         cycleIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 3,
+            this.textRenderer, centerX - fieldWidth / 2, configStartY,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.cycle_interval")
         );
         cycleIntervalField.setMaxLength(10);
         this.addSelectableChild(cycleIntervalField);
 
-        // Key interval field
+        // 按键间隔
         keyIntervalField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 4,
+            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.key_interval")
         );
         keyIntervalField.setMaxLength(10);
         this.addSelectableChild(keyIntervalField);
 
-        // Hold duration field
+        // 按住时长
         holdDurationField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 5,
+            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing * 2,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.hold_duration")
         );
         holdDurationField.setMaxLength(10);
         this.addSelectableChild(holdDurationField);
 
-        // Press count field
+        // 按键次数
         pressCountField = new TextFieldWidget(
-            this.textRenderer, centerX - fieldWidth / 2, startY + spacing * 6,
+            this.textRenderer, centerX - fieldWidth / 2, configStartY + spacing * 3,
             fieldWidth, fieldHeight,
             Text.translatable("gui.autohelper.task.press_count")
         );
         pressCountField.setMaxLength(5);
         this.addSelectableChild(pressCountField);
 
-        // Fill existing values
-        if (existingTask != null) {
-            if (existingTask.nickname != null) {
-                nicknameField.setText(existingTask.nickname);
-            }
-            if (existingTask.keyName != null) {
-                keyNameField.setText(existingTask.keyName);
-            }
-            if (existingTask.command != null) {
-                commandField.setText(existingTask.command);
-            }
-            cycleIntervalField.setText(String.valueOf(existingTask.cycleInterval));
-            keyIntervalField.setText(String.valueOf(existingTask.keyInterval));
-            holdDurationField.setText(String.valueOf(existingTask.holdDuration));
-            pressCountField.setText(String.valueOf(existingTask.pressCount));
-        } else {
-            // Default values
+        // 默认值
+        if (existingTask == null) {
             cycleIntervalField.setText("5000");
             keyIntervalField.setText("0");
             holdDurationField.setText("100");
             pressCountField.setText("1");
         }
 
-        // Save and Cancel buttons
+        // 保存和取消按钮
         saveButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.save"),
             button -> saveTask())
-            .dimensions(centerX - 105, startY + spacing * 7, 100, 20)
+            .dimensions(centerX - 105, configStartY + spacing * 4, 100, 20)
             .build();
         this.addDrawableChild(saveButton);
 
         cancelButton = ButtonWidget.builder(
             Text.translatable("gui.autohelper.task.cancel"),
             button -> this.close())
-            .dimensions(centerX + 5, startY + spacing * 7, 100, 20)
+            .dimensions(centerX + 5, configStartY + spacing * 4, 100, 20)
             .build();
         this.addDrawableChild(cancelButton);
+    }
+
+    private void rebuildKeyCommandPairUI(int startY) {
+        // 清空旧的UI组件
+        for (TextFieldWidget field : keyNameFields) {
+            this.remove(field);
+        }
+        for (TextFieldWidget field : commandFields) {
+            this.remove(field);
+        }
+        for (ButtonWidget button : addButtons) {
+            this.remove(button);
+        }
+        for (ButtonWidget button : removeButtons) {
+            this.remove(button);
+        }
+
+        keyNameFields.clear();
+        commandFields.clear();
+        addButtons.clear();
+        removeButtons.clear();
+
+        int centerX = this.width / 2;
+
+        for (int i = 0; i < keyCommandPairs.size(); i++) {
+            final int index = i;
+            KeyCommandPair pair = keyCommandPairs.get(i);
+            int y = startY + (i * PAIR_HEIGHT) - scrollOffset;
+
+            // 按键名称输入框 (60px宽)
+            TextFieldWidget keyField = new TextFieldWidget(
+                this.textRenderer, centerX - 150, y, 60, 20,
+                Text.literal("Key")
+            );
+            keyField.setMaxLength(10);
+            keyField.setText(pair.keyName);
+            keyField.setPlaceholder(Text.literal("按键"));
+            this.addSelectableChild(keyField);
+            keyNameFields.add(keyField);
+
+            // 命令输入框 (200px宽)
+            TextFieldWidget cmdField = new TextFieldWidget(
+                this.textRenderer, centerX - 80, y, 200, 20,
+                Text.literal("Command")
+            );
+            cmdField.setMaxLength(256);
+            cmdField.setText(pair.command);
+            cmdField.setPlaceholder(Text.literal("命令"));
+            this.addSelectableChild(cmdField);
+            commandFields.add(cmdField);
+
+            // 添加按钮 (+)
+            if (i == keyCommandPairs.size() - 1) {
+                ButtonWidget addBtn = ButtonWidget.builder(
+                    Text.literal("+"),
+                    button -> addKeyCommandPair())
+                    .dimensions(centerX + 125, y, 20, 20)
+                    .build();
+                this.addDrawableChild(addBtn);
+                addButtons.add(addBtn);
+            }
+
+            // 删除按钮 (-)
+            if (keyCommandPairs.size() > 1) {
+                ButtonWidget removeBtn = ButtonWidget.builder(
+                    Text.literal("-"),
+                    button -> removeKeyCommandPair(index))
+                    .dimensions(centerX + 150, y, 20, 20)
+                    .build();
+                this.addDrawableChild(removeBtn);
+                removeButtons.add(removeBtn);
+            }
+        }
+    }
+
+    private void addKeyCommandPair() {
+        keyCommandPairs.add(new KeyCommandPair());
+        this.clearChildren();
+        this.init();
+    }
+
+    private void removeKeyCommandPair(int index) {
+        if (keyCommandPairs.size() > 1) {
+            keyCommandPairs.remove(index);
+            this.clearChildren();
+            this.init();
+        }
     }
 
     private void saveTask() {
         errorMessage = null;
 
         try {
+            // 收集所有按键-命令对的数据
+            StringBuilder keyNameBuilder = new StringBuilder();
+            StringBuilder commandBuilder = new StringBuilder();
+
+            for (int i = 0; i < keyCommandPairs.size(); i++) {
+                String key = keyNameFields.get(i).getText().trim();
+                String cmd = commandFields.get(i).getText().trim();
+
+                if (!key.isEmpty() || !cmd.isEmpty()) {
+                    if (keyNameBuilder.length() > 0) {
+                        // 按键直接连接，不用分隔符
+                        keyNameBuilder.append(key);
+                        // 命令用逗号分隔
+                        commandBuilder.append(",");
+                    } else {
+                        keyNameBuilder.append(key);
+                    }
+                    commandBuilder.append(cmd);
+                }
+            }
+
+            String keyName = keyNameBuilder.toString();
+            String command = commandBuilder.toString();
             String nickname = nicknameField.getText().trim();
-            String keyName = keyNameField.getText().trim();
-            String command = commandField.getText().trim();
 
             // 验证：至少要有按键名或命令
             if (keyName.isEmpty() && command.isEmpty()) {
@@ -169,7 +289,7 @@ public class TaskEditScreen extends Screen {
             int holdDuration = Integer.parseInt(holdDurationField.getText());
             int pressCount = Integer.parseInt(pressCountField.getText());
 
-            // Validation (pressCount can be 0 for infinite loop)
+            // 验证数值
             if (cycleInterval < 0 || keyInterval < 0 || holdDuration < 0 || pressCount < 0) {
                 errorMessage = Text.translatable("gui.autohelper.task.error_invalid_number").getString();
                 return;
@@ -195,74 +315,59 @@ public class TaskEditScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Render background
         this.renderBackground(context, mouseX, mouseY, delta);
-
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 40 - scrollOffset;  // 应用滚动偏移
-        int spacing = 38;
-        int labelOffset = -14;
+        int startY = 40 - scrollOffset;
+        int spacing = 30;
 
-        // Draw labels (with scroll offset)
+        // 绘制标签
         context.drawTextWithShadow(this.textRenderer,
-            Text.literal("任务昵称 (可选)"),
-            centerX - 100, startY + labelOffset, 0xFFFFFF);
+            Text.literal("任务昵称"),
+            centerX - 100, startY - 14, 0xFFFFFF);
 
+        // 按键-命令对区域标签
+        int pairStartY = startY + spacing + 20;
         context.drawTextWithShadow(this.textRenderer,
-            Text.translatable("gui.autohelper.task.key_name"),
-            centerX - 100, startY + spacing + labelOffset, 0xFFFFFF);
+            Text.literal("按键-命令映射"),
+            centerX - 150, pairStartY - 20, 0xFFFFFF);
 
-        context.drawTextWithShadow(this.textRenderer,
-            Text.literal("命令 (可选)"),
-            centerX - 100, startY + spacing * 2 + labelOffset, 0xFFFFFF);
-
+        // 配置参数标签
+        int configStartY = pairStartY + (keyCommandPairs.size() * PAIR_HEIGHT) + 20;
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.cycle_interval"),
-            centerX - 100, startY + spacing * 3 + labelOffset, 0xFFFFFF);
+            centerX - 100, configStartY - 14, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.key_interval"),
-            centerX - 100, startY + spacing * 4 + labelOffset, 0xFFFFFF);
+            centerX - 100, configStartY + spacing - 14, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.hold_duration"),
-            centerX - 100, startY + spacing * 5 + labelOffset, 0xFFFFFF);
+            centerX - 100, configStartY + spacing * 2 - 14, 0xFFFFFF);
 
         context.drawTextWithShadow(this.textRenderer,
             Text.translatable("gui.autohelper.task.press_count"),
-            centerX - 100, startY + spacing * 6 + labelOffset, 0xFFFFFF);
+            centerX - 100, configStartY + spacing * 3 - 14, 0xFFFFFF);
 
-        // Render fields
+        // 渲染所有字段
         nicknameField.render(context, mouseX, mouseY, delta);
-        keyNameField.render(context, mouseX, mouseY, delta);
-        commandField.render(context, mouseX, mouseY, delta);
+        for (TextFieldWidget field : keyNameFields) {
+            field.render(context, mouseX, mouseY, delta);
+        }
+        for (TextFieldWidget field : commandFields) {
+            field.render(context, mouseX, mouseY, delta);
+        }
         cycleIntervalField.render(context, mouseX, mouseY, delta);
         keyIntervalField.render(context, mouseX, mouseY, delta);
         holdDurationField.render(context, mouseX, mouseY, delta);
         pressCountField.render(context, mouseX, mouseY, delta);
 
-        // Draw error message if any (with scroll offset)
+        // 绘制错误消息
         if (errorMessage != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, errorMessage,
-                centerX, startY + spacing * 7 + 25, 0xFF5555);
-        }
-
-        // Draw scroll indicator if content is scrollable
-        int maxScroll = Math.max(0, CONTENT_HEIGHT - this.height + 60);
-        if (maxScroll > 0) {
-            // Draw scrollbar background
-            int scrollbarX = this.width - 8;
-            int scrollbarY = 20;
-            int scrollbarHeight = this.height - 40;
-            context.fill(scrollbarX, scrollbarY, scrollbarX + 6, scrollbarY + scrollbarHeight, 0x80000000);
-
-            // Draw scrollbar thumb
-            float scrollProgress = (float) scrollOffset / maxScroll;
-            int thumbHeight = Math.max(20, scrollbarHeight * (this.height - 60) / CONTENT_HEIGHT);
-            int thumbY = scrollbarY + (int)((scrollbarHeight - thumbHeight) * scrollProgress);
-            context.fill(scrollbarX, thumbY, scrollbarX + 6, thumbY + thumbHeight, 0xFFAAAAAA);
+                centerX, configStartY + spacing * 4 + 25, 0xFF5555);
         }
     }
 
@@ -270,32 +375,7 @@ public class TaskEditScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         int maxScroll = Math.max(0, CONTENT_HEIGHT - this.height + 60);
         scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 10));
-
-        // Update field positions
-        updateFieldPositions();
-
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
-    }
-
-    private void updateFieldPositions() {
-        int centerX = this.width / 2;
-        int startY = 40 - scrollOffset;
-        int fieldWidth = 200;
-        int fieldHeight = 20;
-        int spacing = 38;
-
-        // Update all field Y positions
-        if (nicknameField != null) nicknameField.setY(startY);
-        if (keyNameField != null) keyNameField.setY(startY + spacing);
-        if (commandField != null) commandField.setY(startY + spacing * 2);
-        if (cycleIntervalField != null) cycleIntervalField.setY(startY + spacing * 3);
-        if (keyIntervalField != null) keyIntervalField.setY(startY + spacing * 4);
-        if (holdDurationField != null) holdDurationField.setY(startY + spacing * 5);
-        if (pressCountField != null) pressCountField.setY(startY + spacing * 6);
-
-        // Update button positions
-        if (saveButton != null) saveButton.setY(startY + spacing * 7);
-        if (cancelButton != null) cancelButton.setY(startY + spacing * 7);
     }
 
     @Override
@@ -303,5 +383,3 @@ public class TaskEditScreen extends Screen {
         this.client.setScreen(parent);
     }
 }
-
-
