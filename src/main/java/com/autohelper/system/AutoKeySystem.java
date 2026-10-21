@@ -2,13 +2,12 @@ package com.autohelper.system;
 
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
+import com.autohelper.mixin.KeyboardMixin;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class AutoKeySystem {
     private final ConfigManager configManager;
-    private GLFWKeyCallback originalCallback = null;
 
     public AutoKeySystem(ConfigManager configManager) {
         this.configManager = configManager;
@@ -18,6 +17,9 @@ public class AutoKeySystem {
         if (client.world == null || client.player == null) {
             return;
         }
+
+        // 处理已注入的按键
+        ((KeyboardMixin)(Object)client.keyboard).processInjectedKeys();
 
         long currentTime = System.currentTimeMillis();
 
@@ -143,15 +145,8 @@ public class AutoKeySystem {
         long window = client.getWindow().getHandle();
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
 
-        // 获取当前注册的回调并直接调用它
-        // 这会完全模拟真实的GLFW键盘输入
-        GLFWKeyCallback callback = GLFW.glfwSetKeyCallback(window, null);
-        if (callback != null) {
-            // 恢复回调
-            GLFW.glfwSetKeyCallback(window, callback);
-            // 直接调用回调，模拟GLFW事件
-            callback.invoke(window, keyCode, scancode, GLFW.GLFW_PRESS, 0);
-        }
+        // 通过Mixin注入到Keyboard的onKey方法
+        KeyboardMixin.injectKey(window, keyCode, scancode, GLFW.GLFW_PRESS, 0);
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
@@ -161,11 +156,8 @@ public class AutoKeySystem {
         long window = client.getWindow().getHandle();
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
 
-        GLFWKeyCallback callback = GLFW.glfwSetKeyCallback(window, null);
-        if (callback != null) {
-            GLFW.glfwSetKeyCallback(window, callback);
-            callback.invoke(window, keyCode, scancode, GLFW.GLFW_RELEASE, 0);
-        }
+        // 通过Mixin注入到Keyboard的onKey方法
+        KeyboardMixin.injectKey(window, keyCode, scancode, GLFW.GLFW_RELEASE, 0);
     }
 
     public boolean isValidKey(String keyName) {
