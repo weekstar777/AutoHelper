@@ -229,7 +229,12 @@ public class TaskEditScreen extends Screen {
         int centerX = this.width / 2;
         int startY = 30;
 
-        // 应用滚动偏移
+        // 标题固定在顶部，不受滚动影响
+        context.drawCenteredTextWithShadow(this.textRenderer,
+            isNewTask ? "添加新任务" : "编辑任务",
+            centerX, 10, 0xFFFFFF);
+
+        // 应用滚动偏移到其他内容
         context.getMatrices().push();
         context.getMatrices().translate(0, -scrollOffset, 0);
 
@@ -262,11 +267,6 @@ public class TaskEditScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, "按键次数:", centerX - 150, currentY + 5, 0xFFFFFF);
 
         context.getMatrices().pop();
-
-        // 标题（固定在顶部，不受滚动影响）
-        context.drawCenteredTextWithShadow(this.textRenderer,
-            isNewTask ? "添加新任务" : "编辑任务",
-            centerX, 10, 0xFFFFFF);
 
         super.render(context, mouseX, mouseY, delta);
     }
