@@ -2,7 +2,6 @@ package com.autohelper.system;
 
 import com.autohelper.config.ConfigManager;
 import com.autohelper.config.KeyPressTask;
-import com.autohelper.mixin.KeyboardMixin;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
 
@@ -17,9 +16,6 @@ public class AutoKeySystem {
         if (client.world == null || client.player == null) {
             return;
         }
-
-        // 处理已注入的按键
-        ((KeyboardMixin)(Object)client.keyboard).processInjectedKeys();
 
         long currentTime = System.currentTimeMillis();
 
@@ -40,7 +36,6 @@ public class AutoKeySystem {
             task.pressStartTime = 0;
         }
 
-        // 检查是否完成一轮
         if (task.pressCount > 0 && task.currentPressCount >= task.pressCount) {
             if (currentTime - task.lastCycleTime >= task.cycleInterval) {
                 task.currentPressCount = 0;
@@ -50,7 +45,6 @@ public class AutoKeySystem {
             return;
         }
 
-        // pressCount = 0 时的无限循环处理
         if (task.pressCount == 0 && task.currentPressCount > 0) {
             if (currentTime - task.lastCycleTime >= task.cycleInterval) {
                 task.currentPressCount = 0;
@@ -65,7 +59,6 @@ public class AutoKeySystem {
             }
         }
 
-        // 处理按键
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
                 releaseKey(task.keyName, client);
@@ -105,9 +98,7 @@ public class AutoKeySystem {
         switch (keyName) {
             case "Space": return GLFW.GLFW_KEY_SPACE;
             case "Enter": return GLFW.GLFW_KEY_ENTER;
-            case "Escape": return GLFW.GLFW_KEY_ESCAPE;
             case "Tab": return GLFW.GLFW_KEY_TAB;
-            case "Backspace": return GLFW.GLFW_KEY_BACKSPACE;
             case "Shift": return GLFW.GLFW_KEY_LEFT_SHIFT;
             case "Ctrl": return GLFW.GLFW_KEY_LEFT_CONTROL;
             case "Alt": return GLFW.GLFW_KEY_LEFT_ALT;
@@ -123,17 +114,6 @@ public class AutoKeySystem {
             case "F10": return GLFW.GLFW_KEY_F10;
             case "F11": return GLFW.GLFW_KEY_F11;
             case "F12": return GLFW.GLFW_KEY_F12;
-            case "-": case "Minus": return GLFW.GLFW_KEY_MINUS;
-            case "=": case "Equal": return GLFW.GLFW_KEY_EQUAL;
-            case "[": return GLFW.GLFW_KEY_LEFT_BRACKET;
-            case "]": return GLFW.GLFW_KEY_RIGHT_BRACKET;
-            case ";": return GLFW.GLFW_KEY_SEMICOLON;
-            case "'": return GLFW.GLFW_KEY_APOSTROPHE;
-            case ",": return GLFW.GLFW_KEY_COMMA;
-            case ".": return GLFW.GLFW_KEY_PERIOD;
-            case "/": return GLFW.GLFW_KEY_SLASH;
-            case "\\": return GLFW.GLFW_KEY_BACKSLASH;
-            case "`": return GLFW.GLFW_KEY_GRAVE_ACCENT;
             default: return -1;
         }
     }
@@ -145,8 +125,8 @@ public class AutoKeySystem {
         long window = client.getWindow().getHandle();
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
 
-        // 通过Mixin注入到Keyboard的onKey方法
-        KeyboardMixin.injectKey(window, keyCode, scancode, GLFW.GLFW_PRESS, 0);
+        // 直接调用Minecraft的键盘处理方法
+        client.keyboard.onKey(window, keyCode, scancode, GLFW.GLFW_PRESS, 0);
     }
 
     private void releaseKey(String keyName, MinecraftClient client) {
@@ -156,8 +136,7 @@ public class AutoKeySystem {
         long window = client.getWindow().getHandle();
         int scancode = GLFW.glfwGetKeyScancode(keyCode);
 
-        // 通过Mixin注入到Keyboard的onKey方法
-        KeyboardMixin.injectKey(window, keyCode, scancode, GLFW.GLFW_RELEASE, 0);
+        client.keyboard.onKey(window, keyCode, scancode, GLFW.GLFW_RELEASE, 0);
     }
 
     public boolean isValidKey(String keyName) {
