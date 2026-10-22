@@ -61,7 +61,7 @@ public class AutoKeySystem {
                 task.isHolding = false;
             } else {
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    releaseKeyWithCommand(task.keyName, task.command, task.commandTypes, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
+                    releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                     task.isHolding = false;
                 }
                 return;
@@ -70,7 +70,7 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKeyWithCommand(task.keyName, task.command, task.commandTypes, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
+                releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                 task.isHolding = false;
                 task.currentPressCount++;
             }
@@ -233,10 +233,10 @@ public class AutoKeySystem {
     }
 
     private void releaseKey(String keyName, MinecraftClient client, boolean execute) {
-        releaseKeyWithCommand(keyName, null, null, client, execute, false);
+        releaseKeyWithCommand(keyName, null, client, execute, false);
     }
 
-    private void releaseKeyWithCommand(String keyName, String command, String commandTypes, MinecraftClient client, boolean executeKey, boolean executeCmd) {
+    private void releaseKeyWithCommand(String keyName, String command, MinecraftClient client, boolean executeKey, boolean executeCmd) {
         if (!executeKey || robot == null || keyName == null || keyName.isEmpty()) return;
 
         String[] commands = null;

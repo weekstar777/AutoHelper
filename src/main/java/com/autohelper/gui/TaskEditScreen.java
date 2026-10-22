@@ -32,7 +32,6 @@ public class TaskEditScreen extends Screen {
 
     private List<KeyCommandPair> keyCommandPairs = new ArrayList<>();
     private List<ButtonWidget> addRemoveButtons = new ArrayList<>();
-    private List<ButtonWidget> modeToggleButtons = new ArrayList<>();
 
     private double scrollOffset = 0;
     private double maxScrollOffset = 0;
@@ -43,7 +42,6 @@ public class TaskEditScreen extends Screen {
     private static final int CMD_FIELD_WIDTH = 150;
     private static final int SMALL_FIELD_WIDTH = 80;
     private static final int BUTTON_WIDTH = 20;
-    private static final int MODE_BUTTON_WIDTH = 35;
     private static final int ROW_HEIGHT = 25;
 
     public TaskEditScreen(Screen parent, ConfigManager configManager, KeyPressTask task, int taskIndex) {
@@ -57,13 +55,11 @@ public class TaskEditScreen extends Screen {
         if (this.task.keyName != null && !this.task.keyName.isEmpty()) {
             String[] keys = this.task.keyName.split(",");
             String[] commands = this.task.command != null ? this.task.command.split(",") : new String[0];
-            String[] types = this.task.commandTypes != null ? this.task.commandTypes.split(",") : new String[0];
 
             for (int i = 0; i < keys.length; i++) {
                 KeyCommandPair pair = new KeyCommandPair();
                 pair.keyName = keys[i].trim();
                 pair.command = (i < commands.length) ? commands[i].trim() : "";
-                pair.isCommand = (i < types.length) ? "cmd".equals(types[i].trim()) : false;
                 keyCommandPairs.add(pair);
             }
         }
@@ -78,7 +74,6 @@ public class TaskEditScreen extends Screen {
         keyNameFields.clear();
         commandFields.clear();
         addRemoveButtons.clear();
-        modeToggleButtons.clear();
 
         int centerX = this.width / 2;
         int startY = 40;
@@ -98,17 +93,6 @@ public class TaskEditScreen extends Screen {
         for (int i = 0; i < keyCommandPairs.size(); i++) {
             final int index = i;
             KeyCommandPair pair = keyCommandPairs.get(i);
-
-            ButtonWidget modeBtn = ButtonWidget.builder(
-                Text.literal(pair.isCommand ? "令" : "息"),
-                button -> {
-                    pair.isCommand = !pair.isCommand;
-                    button.setMessage(Text.literal(pair.isCommand ? "令" : "息"));
-                })
-                .dimensions(centerX - 130, layoutY - (int) scrollOffset, MODE_BUTTON_WIDTH, 20)
-                .build();
-            this.addDrawableChild(modeBtn);
-            modeToggleButtons.add(modeBtn);
 
             TextFieldWidget keyField = new TextFieldWidget(
                 this.textRenderer,
@@ -286,13 +270,11 @@ public class TaskEditScreen extends Screen {
 
         List<String> validKeys = new ArrayList<>();
         List<String> validCommands = new ArrayList<>();
-        List<String> validTypes = new ArrayList<>();
 
         for (KeyCommandPair pair : keyCommandPairs) {
             if (pair.isValid()) {
                 validKeys.add(pair.keyName);
                 validCommands.add(pair.command);
-                validTypes.add(pair.isCommand ? "cmd" : "msg");
             }
         }
 
@@ -302,7 +284,6 @@ public class TaskEditScreen extends Screen {
 
         String keyName = String.join(",", validKeys);
         String command = String.join(",", validCommands);
-        String commandTypes = String.join(",", validTypes);
 
         try {
             int loopInterval = Integer.parseInt(loopIntervalField.getText());
@@ -313,7 +294,6 @@ public class TaskEditScreen extends Screen {
             task.nickname = nickname;
             task.keyName = keyName;
             task.command = command;
-            task.commandTypes = commandTypes;
             task.cycleInterval = loopInterval;
             task.keyInterval = keyInterval;
             task.holdDuration = holdDuration;
@@ -456,7 +436,6 @@ public class TaskEditScreen extends Screen {
     private static class KeyCommandPair {
         String keyName = "";
         String command = "";
-        boolean isCommand = false;  // 默认为消息模式
 
         boolean isValid() {
             return !keyName.trim().isEmpty() && !command.trim().isEmpty();

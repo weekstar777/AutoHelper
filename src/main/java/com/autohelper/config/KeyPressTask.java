@@ -4,7 +4,6 @@ public class KeyPressTask {
     public String nickname;          // User-defined display name
     public String keyName;           // Key name like "Q", "Num8", "S"
     public String command;           // Command to execute (e.g., "/give @s apple 64")
-    public String commandTypes;      // Command types: "cmd,msg,cmd" (cmd=command, msg=message)
     public int cycleInterval;        // Milliseconds between cycles
     public int keyInterval;          // Milliseconds between key presses
     public int holdDuration;         // Milliseconds to hold key
@@ -21,7 +20,6 @@ public class KeyPressTask {
         this.enabled = true;
         this.nickname = "";
         this.command = "";
-        this.commandTypes = "";
     }
 
     public KeyPressTask(String keyName, int cycleInterval, int keyInterval,
