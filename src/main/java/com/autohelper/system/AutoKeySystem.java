@@ -241,7 +241,7 @@ public class AutoKeySystem {
         String[] types = null;
         if (executeCmd && command != null && !command.trim().isEmpty()) {
             commands = command.split(",");
-            types = commandTypes != null ? commandTypes.split(",") : null;
+            types = commandTypes != null && !commandTypes.trim().isEmpty() ? commandTypes.split(",") : null;
         }
 
         if (keyName.contains(",")) {
@@ -250,7 +250,7 @@ public class AutoKeySystem {
                 releaseSingleKey(keys[i].trim());
 
                 if (commands != null && i < commands.length) {
-                    boolean isCmd = (types != null && i < types.length) ? "cmd".equals(types[i].trim()) : true;
+                    boolean isCmd = determineIsCommand(commands[i], types, i);
                     executeCommand(commands[i].trim(), isCmd, client);
                 }
 
@@ -265,7 +265,7 @@ public class AutoKeySystem {
                 releaseSingleKey(String.valueOf(keyName.charAt(i)));
 
                 if (commands != null && i < commands.length) {
-                    boolean isCmd = (types != null && i < types.length) ? "cmd".equals(types[i].trim()) : true;
+                    boolean isCmd = determineIsCommand(commands[i], types, i);
                     executeCommand(commands[i].trim(), isCmd, client);
                 }
 
@@ -279,10 +279,17 @@ public class AutoKeySystem {
             releaseSingleKey(keyName);
 
             if (commands != null && commands.length > 0) {
-                boolean isCmd = (types != null && types.length > 0) ? "cmd".equals(types[0].trim()) : true;
+                boolean isCmd = determineIsCommand(commands[0], types, 0);
                 executeCommand(commands[0].trim(), isCmd, client);
             }
         }
+    }
+
+    private boolean determineIsCommand(String commandText, String[] types, int index) {
+        if (types != null && index < types.length) {
+            return "cmd".equals(types[index].trim());
+        }
+        return commandText.trim().startsWith("/");
     }
 
     private void releaseSingleKey(String keyName) {
