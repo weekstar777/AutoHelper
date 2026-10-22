@@ -225,35 +225,47 @@ public class TaskEditScreen extends Screen {
             }
         }
 
-        if (loopIntervalField != null && !loopIntervalField.getText().isEmpty()) {
-            try {
-                task.cycleInterval = Integer.parseInt(loopIntervalField.getText());
-            } catch (NumberFormatException e) {
-                // Keep old value
+        if (loopIntervalField != null) {
+            String text = loopIntervalField.getText().trim();
+            if (!text.isEmpty()) {
+                try {
+                    task.cycleInterval = Integer.parseInt(text);
+                } catch (NumberFormatException e) {
+                    // Keep old value if invalid input
+                }
             }
         }
 
-        if (keyIntervalField != null && !keyIntervalField.getText().isEmpty()) {
-            try {
-                task.keyInterval = Integer.parseInt(keyIntervalField.getText());
-            } catch (NumberFormatException e) {
-                // Keep old value
+        if (keyIntervalField != null) {
+            String text = keyIntervalField.getText().trim();
+            if (!text.isEmpty()) {
+                try {
+                    task.keyInterval = Integer.parseInt(text);
+                } catch (NumberFormatException e) {
+                    // Keep old value if invalid input
+                }
             }
         }
 
-        if (holdDurationField != null && !holdDurationField.getText().isEmpty()) {
-            try {
-                task.holdDuration = Integer.parseInt(holdDurationField.getText());
-            } catch (NumberFormatException e) {
-                // Keep old value
+        if (holdDurationField != null) {
+            String text = holdDurationField.getText().trim();
+            if (!text.isEmpty()) {
+                try {
+                    task.holdDuration = Integer.parseInt(text);
+                } catch (NumberFormatException e) {
+                    // Keep old value if invalid input
+                }
             }
         }
 
-        if (pressCountField != null && !pressCountField.getText().isEmpty()) {
-            try {
-                task.pressCount = Integer.parseInt(pressCountField.getText());
-            } catch (NumberFormatException e) {
-                // Keep old value
+        if (pressCountField != null) {
+            String text = pressCountField.getText().trim();
+            if (!text.isEmpty()) {
+                try {
+                    task.pressCount = Integer.parseInt(text);
+                } catch (NumberFormatException e) {
+                    // Keep old value if invalid input
+                }
             }
         }
     }
