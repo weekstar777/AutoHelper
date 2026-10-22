@@ -212,6 +212,10 @@ public class TaskEditScreen extends Screen {
     }
 
     private void saveCurrentInputData() {
+        if (taskNameField != null) {
+            task.nickname = taskNameField.getText();
+        }
+
         for (int i = 0; i < keyCommandPairs.size(); i++) {
             if (i < keyNameFields.size()) {
                 keyCommandPairs.get(i).keyName = keyNameFields.get(i).getText();
@@ -220,9 +224,42 @@ public class TaskEditScreen extends Screen {
                 keyCommandPairs.get(i).command = commandFields.get(i).getText();
             }
         }
+
+        if (loopIntervalField != null && !loopIntervalField.getText().isEmpty()) {
+            try {
+                task.cycleInterval = Integer.parseInt(loopIntervalField.getText());
+            } catch (NumberFormatException e) {
+                // Keep old value
+            }
+        }
+
+        if (keyIntervalField != null && !keyIntervalField.getText().isEmpty()) {
+            try {
+                task.keyInterval = Integer.parseInt(keyIntervalField.getText());
+            } catch (NumberFormatException e) {
+                // Keep old value
+            }
+        }
+
+        if (holdDurationField != null && !holdDurationField.getText().isEmpty()) {
+            try {
+                task.holdDuration = Integer.parseInt(holdDurationField.getText());
+            } catch (NumberFormatException e) {
+                // Keep old value
+            }
+        }
+
+        if (pressCountField != null && !pressCountField.getText().isEmpty()) {
+            try {
+                task.pressCount = Integer.parseInt(pressCountField.getText());
+            } catch (NumberFormatException e) {
+                // Keep old value
+            }
+        }
     }
 
     private void rebuildUI() {
+        saveCurrentInputData();
         this.clearChildren();
         this.init();
     }
@@ -283,35 +320,33 @@ public class TaskEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int startY = 40;
-        int layoutY = startY;
+        int layoutY = 15;
 
-        layoutY -= (int) scrollOffset;
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+            centerX, layoutY - (int) scrollOffset, LABEL_COLOR);
+
+        layoutY = 40;
 
         context.drawTextWithShadow(this.textRenderer, "任务昵称:",
-            centerX - 90, layoutY - 12, LABEL_COLOR);
+            centerX - 90, layoutY - (int) scrollOffset - 12, LABEL_COLOR);
         layoutY += ROW_HEIGHT + 15;
 
         layoutY += (keyNameFields.size() * ROW_HEIGHT) + 10;
 
         context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):",
-            centerX - 90, layoutY + 6, LABEL_COLOR);
+            centerX - 90, layoutY - (int) scrollOffset + 6, LABEL_COLOR);
         layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):",
-            centerX - 90, layoutY + 6, LABEL_COLOR);
+            centerX - 90, layoutY - (int) scrollOffset + 6, LABEL_COLOR);
         layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按住时长(ms):",
-            centerX - 90, layoutY + 6, LABEL_COLOR);
+            centerX - 90, layoutY - (int) scrollOffset + 6, LABEL_COLOR);
         layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键次数:",
-            centerX - 90, layoutY + 6, LABEL_COLOR);
-
-        context.fill(0, 0, this.width, 30, 0xCC000000);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
-            centerX, 15, LABEL_COLOR);
+            centerX - 90, layoutY - (int) scrollOffset + 6, LABEL_COLOR);
     }
 
     @Override
