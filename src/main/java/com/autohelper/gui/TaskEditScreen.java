@@ -284,31 +284,34 @@ public class TaskEditScreen extends Screen {
 
         int centerX = this.width / 2;
         int startY = 40;
-        int currentY = startY - (int) scrollOffset;
+        int layoutY = startY;
 
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
-            centerX, 15, LABEL_COLOR);
+        layoutY -= (int) scrollOffset;
 
         context.drawTextWithShadow(this.textRenderer, "任务昵称:",
-            centerX - 90, currentY - 12, LABEL_COLOR);
-        currentY += ROW_HEIGHT + 15;
+            centerX - 90, layoutY - 12, LABEL_COLOR);
+        layoutY += ROW_HEIGHT + 15;
 
-        currentY += (keyNameFields.size() * ROW_HEIGHT);
+        layoutY += (keyNameFields.size() * ROW_HEIGHT) + 10;
 
         context.drawTextWithShadow(this.textRenderer, "循环间隔(ms):",
-            centerX - 90, currentY + 5, LABEL_COLOR);
-        currentY += ROW_HEIGHT;
+            centerX - 90, layoutY + 6, LABEL_COLOR);
+        layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键间隔(ms):",
-            centerX - 90, currentY + 5, LABEL_COLOR);
-        currentY += ROW_HEIGHT;
+            centerX - 90, layoutY + 6, LABEL_COLOR);
+        layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按住时长(ms):",
-            centerX - 90, currentY + 5, LABEL_COLOR);
-        currentY += ROW_HEIGHT;
+            centerX - 90, layoutY + 6, LABEL_COLOR);
+        layoutY += ROW_HEIGHT;
 
         context.drawTextWithShadow(this.textRenderer, "按键次数:",
-            centerX - 90, currentY + 5, LABEL_COLOR);
+            centerX - 90, layoutY + 6, LABEL_COLOR);
+
+        context.fill(0, 0, this.width, 30, 0xCC000000);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+            centerX, 15, LABEL_COLOR);
     }
 
     @Override
