@@ -93,15 +93,21 @@ public class AutoKeySystem {
         }
 
         try {
-            String cmd = command.trim();
-            // 移除开头的斜杠（如果有）
-            if (cmd.startsWith("/")) {
-                cmd = cmd.substring(1);
+            String input = command.trim();
+            if (input.isEmpty()) {
+                return;
             }
 
-            // 执行命令
-            client.player.networkHandler.sendCommand(cmd);
-            System.out.println("[AutoHelper] Executed command: /" + cmd);
+            if (input.startsWith("/")) {
+                // 命令：移除开头的/，使用sendCommand
+                String cmd = input.substring(1);
+                client.player.networkHandler.sendCommand(cmd);
+                System.out.println("[AutoHelper] Executed command: /" + cmd);
+            } else {
+                // 消息：直接发送聊天消息
+                client.player.networkHandler.sendChatMessage(input);
+                System.out.println("[AutoHelper] Sent message: " + input);
+            }
         } catch (Exception e) {
             System.err.println("[AutoHelper] Failed to execute command: " + e.getMessage());
         }
