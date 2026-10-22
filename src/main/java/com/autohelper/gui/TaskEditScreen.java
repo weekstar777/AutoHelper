@@ -276,6 +276,7 @@ public class TaskEditScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
         int startY = 40;
@@ -308,8 +309,6 @@ public class TaskEditScreen extends Screen {
 
         context.drawTextWithShadow(this.textRenderer, "按键次数:",
             centerX - 90, currentY + 5, LABEL_COLOR);
-
-        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
