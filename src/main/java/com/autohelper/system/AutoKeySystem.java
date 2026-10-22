@@ -61,7 +61,7 @@ public class AutoKeySystem {
                 task.isHolding = false;
             } else {
                 if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
+                    releaseKeyWithCommand(task.keyName, task.command, task.commandTypes, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                     task.isHolding = false;
                 }
                 return;
@@ -70,7 +70,7 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
+                releaseKeyWithCommand(task.keyName, task.command, task.commandTypes, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
                 task.isHolding = false;
                 task.currentPressCount++;
             }
@@ -87,7 +87,7 @@ public class AutoKeySystem {
         }
     }
 
-    private void executeCommand(String command, MinecraftClient client) {
+    private void executeCommand(String command, boolean isCommand, MinecraftClient client) {
         if (client.player == null || client.player.networkHandler == null) {
             return;
         }
@@ -98,13 +98,11 @@ public class AutoKeySystem {
                 return;
             }
 
-            if (input.startsWith("/")) {
-                // 命令：移除开头的/，使用sendCommand
-                String cmd = input.substring(1);
+            if (isCommand) {
+                String cmd = input.startsWith("/") ? input.substring(1) : input;
                 client.player.networkHandler.sendCommand(cmd);
                 System.out.println("[AutoHelper] Executed command: /" + cmd);
             } else {
-                // 消息：直接发送聊天消息
                 client.player.networkHandler.sendChatMessage(input);
                 System.out.println("[AutoHelper] Sent message: " + input);
             }
@@ -233,27 +231,27 @@ public class AutoKeySystem {
     }
 
     private void releaseKey(String keyName, MinecraftClient client, boolean execute) {
-        releaseKeyWithCommand(keyName, null, client, execute, false);
+        releaseKeyWithCommand(keyName, null, null, client, execute, false);
     }
 
-    private void releaseKeyWithCommand(String keyName, String command, MinecraftClient client, boolean executeKey, boolean executeCmd) {
+    private void releaseKeyWithCommand(String keyName, String command, String commandTypes, MinecraftClient client, boolean executeKey, boolean executeCmd) {
         if (!executeKey || robot == null || keyName == null || keyName.isEmpty()) return;
 
-        // 分割命令列表（用逗号分隔）
         String[] commands = null;
+        String[] types = null;
         if (executeCmd && command != null && !command.trim().isEmpty()) {
             commands = command.split(",");
+            types = commandTypes != null ? commandTypes.split(",") : null;
         }
 
-        // 检查是否是逗号分隔的按键列表（如 "A,B,Space"）
         if (keyName.contains(",")) {
             String[] keys = keyName.split(",");
             for (int i = keys.length - 1; i >= 0; i--) {
                 releaseSingleKey(keys[i].trim());
 
-                // 执行对应的命令（如果有）
                 if (commands != null && i < commands.length) {
-                    executeCommand(commands[i].trim(), client);
+                    boolean isCmd = (types != null && i < types.length) ? "cmd".equals(types[i].trim()) : true;
+                    executeCommand(commands[i].trim(), isCmd, client);
                 }
 
                 try {
@@ -263,13 +261,12 @@ public class AutoKeySystem {
                 }
             }
         } else if (keyName.length() > 1 && keyName.matches("[A-Z]+")) {
-            // 连续字母序列（如 "ABC"）
             for (int i = keyName.length() - 1; i >= 0; i--) {
                 releaseSingleKey(String.valueOf(keyName.charAt(i)));
 
-                // 执行对应的命令（如果有）
                 if (commands != null && i < commands.length) {
-                    executeCommand(commands[i].trim(), client);
+                    boolean isCmd = (types != null && i < types.length) ? "cmd".equals(types[i].trim()) : true;
+                    executeCommand(commands[i].trim(), isCmd, client);
                 }
 
                 try {
@@ -279,12 +276,11 @@ public class AutoKeySystem {
                 }
             }
         } else {
-            // 单个按键
             releaseSingleKey(keyName);
 
-            // 执行命令（单个命令或命令列表的第一个）
             if (commands != null && commands.length > 0) {
-                executeCommand(commands[0].trim(), client);
+                boolean isCmd = (types != null && types.length > 0) ? "cmd".equals(types[0].trim()) : true;
+                executeCommand(commands[0].trim(), isCmd, client);
             }
         }
     }
