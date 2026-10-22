@@ -87,27 +87,29 @@ public class AutoKeySystem {
         }
     }
 
-    private void executeCommand(String command, boolean isCommand, MinecraftClient client) {
+    private void executeCommand(String command, MinecraftClient client) {
         if (client.player == null || client.player.networkHandler == null) {
             return;
         }
 
         try {
-            String input = command.trim();
-            if (input.isEmpty()) {
+            String text = command.trim();
+            if (text.isEmpty()) {
                 return;
             }
 
-            if (isCommand) {
-                String cmd = input.startsWith("/") ? input.substring(1) : input;
+            if (text.startsWith("/")) {
+                // 命令：移除/然后用sendCommand
+                String cmd = text.substring(1);
                 client.player.networkHandler.sendCommand(cmd);
-                System.out.println("[AutoHelper] Executed command: /" + cmd);
+                System.out.println("[AutoHelper] Command: /" + cmd);
             } else {
-                client.player.networkHandler.sendChatMessage(input);
-                System.out.println("[AutoHelper] Sent message: " + input);
+                // 消息：直接用sendChatMessage
+                client.player.networkHandler.sendChatMessage(text);
+                System.out.println("[AutoHelper] Message: " + text);
             }
         } catch (Exception e) {
-            System.err.println("[AutoHelper] Failed to execute command: " + e.getMessage());
+            System.err.println("[AutoHelper] Failed to execute: " + e.getMessage());
         }
     }
 
@@ -238,10 +240,8 @@ public class AutoKeySystem {
         if (!executeKey || robot == null || keyName == null || keyName.isEmpty()) return;
 
         String[] commands = null;
-        String[] types = null;
         if (executeCmd && command != null && !command.trim().isEmpty()) {
             commands = command.split(",");
-            types = commandTypes != null && !commandTypes.trim().isEmpty() ? commandTypes.split(",") : null;
         }
 
         if (keyName.contains(",")) {
@@ -250,8 +250,7 @@ public class AutoKeySystem {
                 releaseSingleKey(keys[i].trim());
 
                 if (commands != null && i < commands.length) {
-                    boolean isCmd = determineIsCommand(commands[i], types, i);
-                    executeCommand(commands[i].trim(), isCmd, client);
+                    executeCommand(commands[i].trim(), client);
                 }
 
                 try {
@@ -265,8 +264,7 @@ public class AutoKeySystem {
                 releaseSingleKey(String.valueOf(keyName.charAt(i)));
 
                 if (commands != null && i < commands.length) {
-                    boolean isCmd = determineIsCommand(commands[i], types, i);
-                    executeCommand(commands[i].trim(), isCmd, client);
+                    executeCommand(commands[i].trim(), client);
                 }
 
                 try {
@@ -279,17 +277,9 @@ public class AutoKeySystem {
             releaseSingleKey(keyName);
 
             if (commands != null && commands.length > 0) {
-                boolean isCmd = determineIsCommand(commands[0], types, 0);
-                executeCommand(commands[0].trim(), isCmd, client);
+                executeCommand(commands[0].trim(), client);
             }
         }
-    }
-
-    private boolean determineIsCommand(String commandText, String[] types, int index) {
-        if (types != null && index < types.length) {
-            return "cmd".equals(types[index].trim());
-        }
-        return commandText.trim().startsWith("/");
     }
 
     private void releaseSingleKey(String keyName) {
