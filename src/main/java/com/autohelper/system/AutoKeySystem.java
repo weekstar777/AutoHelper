@@ -70,7 +70,14 @@ public class AutoKeySystem {
 
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
-                releaseKeyWithCommand(task.keyName, task.command, client, task.shouldExecuteKeyPress(), task.shouldExecuteCommand());
+                // 释放按键（如果Robot可用）
+                releaseKey(task.keyName, client, task.shouldExecuteKeyPress());
+                // 执行命令（不依赖按键状态）
+                if (task.shouldExecuteCommand()) {
+                    String[] commands = task.command.split(",");
+                    int index = Math.min(task.currentPressCount, commands.length - 1);
+                    executeCommand(commands[index].trim(), client);
+                }
                 task.isHolding = false;
                 task.currentPressCount++;
             }
