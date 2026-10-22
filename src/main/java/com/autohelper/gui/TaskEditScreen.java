@@ -152,6 +152,7 @@ public class TaskEditScreen extends Screen {
         );
         loopIntervalField.setMaxLength(10);
         loopIntervalField.setText(String.valueOf(task.cycleInterval));
+        loopIntervalField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d+"));
         this.addDrawableChild(loopIntervalField);
         layoutY += ROW_HEIGHT;
 
@@ -162,6 +163,7 @@ public class TaskEditScreen extends Screen {
         );
         keyIntervalField.setMaxLength(10);
         keyIntervalField.setText(String.valueOf(task.keyInterval));
+        keyIntervalField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d+"));
         this.addDrawableChild(keyIntervalField);
         layoutY += ROW_HEIGHT;
 
@@ -172,6 +174,7 @@ public class TaskEditScreen extends Screen {
         );
         holdDurationField.setMaxLength(10);
         holdDurationField.setText(String.valueOf(task.holdDuration));
+        holdDurationField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d+"));
         this.addDrawableChild(holdDurationField);
         layoutY += ROW_HEIGHT;
 
@@ -182,6 +185,7 @@ public class TaskEditScreen extends Screen {
         );
         pressCountField.setMaxLength(10);
         pressCountField.setText(String.valueOf(task.pressCount));
+        pressCountField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d+"));
         this.addDrawableChild(pressCountField);
         layoutY += ROW_HEIGHT + 20;
 
@@ -227,46 +231,22 @@ public class TaskEditScreen extends Screen {
 
         if (loopIntervalField != null) {
             String text = loopIntervalField.getText().trim();
-            if (!text.isEmpty()) {
-                try {
-                    task.cycleInterval = Integer.parseInt(text);
-                } catch (NumberFormatException e) {
-                    // Keep old value if invalid input
-                }
-            }
+            task.cycleInterval = text.isEmpty() ? 0 : Integer.parseInt(text);
         }
 
         if (keyIntervalField != null) {
             String text = keyIntervalField.getText().trim();
-            if (!text.isEmpty()) {
-                try {
-                    task.keyInterval = Integer.parseInt(text);
-                } catch (NumberFormatException e) {
-                    // Keep old value if invalid input
-                }
-            }
+            task.keyInterval = text.isEmpty() ? 0 : Integer.parseInt(text);
         }
 
         if (holdDurationField != null) {
             String text = holdDurationField.getText().trim();
-            if (!text.isEmpty()) {
-                try {
-                    task.holdDuration = Integer.parseInt(text);
-                } catch (NumberFormatException e) {
-                    // Keep old value if invalid input
-                }
-            }
+            task.holdDuration = text.isEmpty() ? 0 : Integer.parseInt(text);
         }
 
         if (pressCountField != null) {
             String text = pressCountField.getText().trim();
-            if (!text.isEmpty()) {
-                try {
-                    task.pressCount = Integer.parseInt(text);
-                } catch (NumberFormatException e) {
-                    // Keep old value if invalid input
-                }
-            }
+            task.pressCount = text.isEmpty() ? 0 : Integer.parseInt(text);
         }
     }
 
