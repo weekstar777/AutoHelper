@@ -7,6 +7,10 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,9 +99,9 @@ public class TaskEditScreen extends Screen {
                 centerX - 90, layoutY - (int) scrollOffset, KEY_FIELD_WIDTH, 20,
                 Text.of("按键")
             );
-            keyField.setMaxLength(1);
+            keyField.setMaxLength(20);
             keyField.setText(pair.keyName);
-            keyField.setPlaceholder(Text.of("按键"));
+            keyField.setPlaceholder(Text.of("点击后按键"));
             this.addDrawableChild(keyField);
             keyNameFields.add(keyField);
 
@@ -108,7 +112,7 @@ public class TaskEditScreen extends Screen {
             );
             cmdField.setMaxLength(100);
             cmdField.setText(pair.command);
-            cmdField.setPlaceholder(Text.of("命令（如：/say hello）"));
+            cmdField.setPlaceholder(Text.of("/命令 或 消息"));
             this.addDrawableChild(cmdField);
             commandFields.add(cmdField);
 
@@ -347,6 +351,81 @@ public class TaskEditScreen extends Screen {
         scrollOffset = Math.max(0, Math.min(newOffset, maxScrollOffset));
         rebuildUI();
         return true;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        for (TextFieldWidget keyField : keyNameFields) {
+            if (keyField.isFocused()) {
+                if (keyCode == GLFW.GLFW_KEY_ESCAPE ||
+                    keyCode == GLFW.GLFW_KEY_TAB ||
+                    keyCode == GLFW.GLFW_KEY_BACKSPACE ||
+                    keyCode == GLFW.GLFW_KEY_DELETE) {
+                    return super.keyPressed(keyCode, scanCode, modifiers);
+                }
+
+                String keyName = convertKeyCodeToName(keyCode);
+                keyField.setText(keyName);
+                keyField.setFocused(false);
+                return true;
+            }
+        }
+
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private String convertKeyCodeToName(int keyCode) {
+        if (keyCode >= GLFW.GLFW_KEY_A && keyCode <= GLFW.GLFW_KEY_Z) {
+            return String.valueOf((char)keyCode);
+        }
+
+        if (keyCode >= GLFW.GLFW_KEY_0 && keyCode <= GLFW.GLFW_KEY_9) {
+            return String.valueOf((char)keyCode);
+        }
+
+        if (keyCode >= GLFW.GLFW_KEY_KP_0 && keyCode <= GLFW.GLFW_KEY_KP_9) {
+            return "Num" + (keyCode - GLFW.GLFW_KEY_KP_0);
+        }
+
+        if (keyCode >= GLFW.GLFW_KEY_F1 && keyCode <= GLFW.GLFW_KEY_F12) {
+            return "F" + (keyCode - GLFW.GLFW_KEY_F1 + 1);
+        }
+
+        switch (keyCode) {
+            case GLFW.GLFW_KEY_SPACE: return "Space";
+            case GLFW.GLFW_KEY_ENTER: return "Enter";
+            case GLFW.GLFW_KEY_LEFT_SHIFT: return "LShift";
+            case GLFW.GLFW_KEY_RIGHT_SHIFT: return "RShift";
+            case GLFW.GLFW_KEY_LEFT_CONTROL: return "LCtrl";
+            case GLFW.GLFW_KEY_RIGHT_CONTROL: return "RCtrl";
+            case GLFW.GLFW_KEY_LEFT_ALT: return "LAlt";
+            case GLFW.GLFW_KEY_RIGHT_ALT: return "RAlt";
+            case GLFW.GLFW_KEY_LEFT: return "Left";
+            case GLFW.GLFW_KEY_RIGHT: return "Right";
+            case GLFW.GLFW_KEY_UP: return "Up";
+            case GLFW.GLFW_KEY_DOWN: return "Down";
+            case GLFW.GLFW_KEY_HOME: return "Home";
+            case GLFW.GLFW_KEY_END: return "End";
+            case GLFW.GLFW_KEY_PAGE_UP: return "PgUp";
+            case GLFW.GLFW_KEY_PAGE_DOWN: return "PgDn";
+            case GLFW.GLFW_KEY_INSERT: return "Insert";
+            case GLFW.GLFW_KEY_CAPS_LOCK: return "CapsLock";
+            case GLFW.GLFW_KEY_NUM_LOCK: return "NumLock";
+            case GLFW.GLFW_KEY_SCROLL_LOCK: return "ScrollLock";
+            case GLFW.GLFW_KEY_PAUSE: return "Pause";
+            case GLFW.GLFW_KEY_MINUS: return "-";
+            case GLFW.GLFW_KEY_EQUAL: return "=";
+            case GLFW.GLFW_KEY_LEFT_BRACKET: return "[";
+            case GLFW.GLFW_KEY_RIGHT_BRACKET: return "]";
+            case GLFW.GLFW_KEY_SEMICOLON: return ";";
+            case GLFW.GLFW_KEY_APOSTROPHE: return "'";
+            case GLFW.GLFW_KEY_COMMA: return ",";
+            case GLFW.GLFW_KEY_PERIOD: return ".";
+            case GLFW.GLFW_KEY_SLASH: return "/";
+            case GLFW.GLFW_KEY_BACKSLASH: return "\\";
+            case GLFW.GLFW_KEY_GRAVE_ACCENT: return "`";
+            default: return "Key" + keyCode;
+        }
     }
 
     @Override
