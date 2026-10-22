@@ -80,8 +80,6 @@ public class KeyboardMixin {
                 if (keyIndex != -1) {
                     // 匹配成功，执行对应的命令
                     executeCommandByIndex(task.command, keyIndex, client);
-                    // 只触发第一个匹配的任务
-                    break;
                 }
             }
         }
