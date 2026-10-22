@@ -35,7 +35,7 @@ public class TaskEditScreen extends Screen {
     private static final int LABEL_COLOR = 0xFFFFFF;
     private static final int FIELD_WIDTH = 180;
     private static final int KEY_FIELD_WIDTH = 25;
-    private static final int CMD_FIELD_WIDTH = 120;
+    private static final int CMD_FIELD_WIDTH = 150;
     private static final int SMALL_FIELD_WIDTH = 80;
     private static final int BUTTON_WIDTH = 20;
     private static final int ROW_HEIGHT = 25;
@@ -73,18 +73,18 @@ public class TaskEditScreen extends Screen {
 
         int centerX = this.width / 2;
         int startY = 40;
-        int currentY = startY - (int) scrollOffset;
+        int layoutY = startY;
 
         taskNameField = new TextFieldWidget(
             this.textRenderer,
-            centerX - 90, currentY, FIELD_WIDTH, 20,
+            centerX - 90, layoutY - (int) scrollOffset, FIELD_WIDTH, 20,
             Text.of("任务昵称")
         );
         taskNameField.setMaxLength(50);
         taskNameField.setText(task.nickname != null ? task.nickname : "");
         taskNameField.setPlaceholder(Text.of("请输入任务昵称..."));
         this.addDrawableChild(taskNameField);
-        currentY += ROW_HEIGHT + 15;
+        layoutY += ROW_HEIGHT + 15;
 
         for (int i = 0; i < keyCommandPairs.size(); i++) {
             final int index = i;
@@ -92,7 +92,7 @@ public class TaskEditScreen extends Screen {
 
             TextFieldWidget keyField = new TextFieldWidget(
                 this.textRenderer,
-                centerX - 90, currentY, KEY_FIELD_WIDTH, 20,
+                centerX - 90, layoutY - (int) scrollOffset, KEY_FIELD_WIDTH, 20,
                 Text.of("按键")
             );
             keyField.setMaxLength(1);
@@ -103,7 +103,7 @@ public class TaskEditScreen extends Screen {
 
             TextFieldWidget cmdField = new TextFieldWidget(
                 this.textRenderer,
-                centerX - 60, currentY, CMD_FIELD_WIDTH, 20,
+                centerX - 60, layoutY - (int) scrollOffset, CMD_FIELD_WIDTH, 20,
                 Text.of("命令")
             );
             cmdField.setMaxLength(100);
@@ -120,7 +120,7 @@ public class TaskEditScreen extends Screen {
                         keyCommandPairs.add(new KeyCommandPair());
                         rebuildUI();
                     })
-                    .dimensions(centerX + 65, currentY, BUTTON_WIDTH, 20)
+                    .dimensions(centerX + 95, layoutY - (int) scrollOffset, BUTTON_WIDTH, 20)
                     .build();
                 this.addDrawableChild(addBtn);
                 addRemoveButtons.add(addBtn);
@@ -134,58 +134,58 @@ public class TaskEditScreen extends Screen {
                             rebuildUI();
                         }
                     })
-                    .dimensions(centerX + 65, currentY, BUTTON_WIDTH, 20)
+                    .dimensions(centerX + 95, layoutY - (int) scrollOffset, BUTTON_WIDTH, 20)
                     .build();
                 this.addDrawableChild(removeBtn);
                 addRemoveButtons.add(removeBtn);
             }
 
-            currentY += ROW_HEIGHT;
+            layoutY += ROW_HEIGHT;
         }
 
-        currentY += 10;
+        layoutY += 10;
 
         loopIntervalField = new TextFieldWidget(
             this.textRenderer,
-            centerX - 10, currentY, SMALL_FIELD_WIDTH, 20,
+            centerX - 10, layoutY - (int) scrollOffset, SMALL_FIELD_WIDTH, 20,
             Text.of("循环间隔")
         );
         loopIntervalField.setMaxLength(10);
         loopIntervalField.setText(String.valueOf(task.cycleInterval));
         this.addDrawableChild(loopIntervalField);
-        currentY += ROW_HEIGHT;
+        layoutY += ROW_HEIGHT;
 
         keyIntervalField = new TextFieldWidget(
             this.textRenderer,
-            centerX - 10, currentY, SMALL_FIELD_WIDTH, 20,
+            centerX - 10, layoutY - (int) scrollOffset, SMALL_FIELD_WIDTH, 20,
             Text.of("按键间隔")
         );
         keyIntervalField.setMaxLength(10);
         keyIntervalField.setText(String.valueOf(task.keyInterval));
         this.addDrawableChild(keyIntervalField);
-        currentY += ROW_HEIGHT;
+        layoutY += ROW_HEIGHT;
 
         holdDurationField = new TextFieldWidget(
             this.textRenderer,
-            centerX - 10, currentY, SMALL_FIELD_WIDTH, 20,
+            centerX - 10, layoutY - (int) scrollOffset, SMALL_FIELD_WIDTH, 20,
             Text.of("按住时长")
         );
         holdDurationField.setMaxLength(10);
         holdDurationField.setText(String.valueOf(task.holdDuration));
         this.addDrawableChild(holdDurationField);
-        currentY += ROW_HEIGHT;
+        layoutY += ROW_HEIGHT;
 
         pressCountField = new TextFieldWidget(
             this.textRenderer,
-            centerX - 10, currentY, SMALL_FIELD_WIDTH, 20,
+            centerX - 10, layoutY - (int) scrollOffset, SMALL_FIELD_WIDTH, 20,
             Text.of("按键次数")
         );
         pressCountField.setMaxLength(10);
         pressCountField.setText(String.valueOf(task.pressCount));
         this.addDrawableChild(pressCountField);
-        currentY += ROW_HEIGHT + 20;
+        layoutY += ROW_HEIGHT + 20;
 
-        int buttonY = Math.max(currentY, this.height - 35);
+        int buttonY = Math.max(layoutY, this.height - 35);
         int buttonWidth = (int)(this.width * 0.2);
         int spacing = 20;
         int totalWidth = buttonWidth * 2 + spacing;
@@ -198,16 +198,17 @@ public class TaskEditScreen extends Screen {
                     this.client.setScreen(parent);
                 }
             })
-            .dimensions(startX, buttonY, buttonWidth, 20)
+            .dimensions(startX, buttonY - (int) scrollOffset, buttonWidth, 20)
             .build());
 
         this.addDrawableChild(ButtonWidget.builder(
             Text.of("取消"),
             button -> this.client.setScreen(parent))
-            .dimensions(startX + buttonWidth + spacing, buttonY, buttonWidth, 20)
+            .dimensions(startX + buttonWidth + spacing, buttonY - (int) scrollOffset, buttonWidth, 20)
             .build());
 
-        maxScrollOffset = Math.max(0, currentY + 40 - this.height);
+        int contentHeight = buttonY + 30;
+        maxScrollOffset = Math.max(0, contentHeight - this.height);
     }
 
     private void saveCurrentInputData() {
