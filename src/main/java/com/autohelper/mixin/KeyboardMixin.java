@@ -97,22 +97,24 @@ public class KeyboardMixin {
             String[] commands = command.split(",");
 
             // 获取对应索引的命令
-            String cmd;
+            String text;
             if (index < commands.length) {
-                cmd = commands[index].trim();
+                text = commands[index].trim();
             } else {
                 // 如果索引超出命令数量，使用最后一个命令
-                cmd = commands[commands.length - 1].trim();
+                text = commands[commands.length - 1].trim();
             }
 
-            // 移除开头的斜杠（如果有）
-            if (cmd.startsWith("/")) {
-                cmd = cmd.substring(1);
+            if (text.startsWith("/")) {
+                // 命令：移除/然后用sendCommand
+                String cmd = text.substring(1);
+                client.player.networkHandler.sendCommand(cmd);
+                System.out.println("[AutoHelper] Manual command[" + index + "]: /" + cmd);
+            } else {
+                // 消息：直接用sendChatMessage
+                client.player.networkHandler.sendChatMessage(text);
+                System.out.println("[AutoHelper] Manual message[" + index + "]: " + text);
             }
-
-            // 执行命令
-            client.player.networkHandler.sendCommand(cmd);
-            System.out.println("[AutoHelper] Manual trigger[" + index + "]: /" + cmd);
         } catch (Exception e) {
             System.err.println("[AutoHelper] Failed to execute manual command: " + e.getMessage());
         }
