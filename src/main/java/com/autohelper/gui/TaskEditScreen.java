@@ -101,7 +101,7 @@ public class TaskEditScreen extends Screen {
             );
             keyField.setMaxLength(20);
             keyField.setText(pair.keyName);
-            keyField.setPlaceholder(Text.of("点击后按键"));
+            keyField.setPlaceholder(Text.of("按键"));
             this.addDrawableChild(keyField);
             keyNameFields.add(keyField);
 
@@ -112,7 +112,7 @@ public class TaskEditScreen extends Screen {
             );
             cmdField.setMaxLength(100);
             cmdField.setText(pair.command);
-            cmdField.setPlaceholder(Text.of("/命令 或 消息"));
+            cmdField.setPlaceholder(Text.of("命令或消息"));
             this.addDrawableChild(cmdField);
             commandFields.add(cmdField);
 
