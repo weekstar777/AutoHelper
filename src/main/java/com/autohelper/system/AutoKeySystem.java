@@ -35,7 +35,15 @@ public class AutoKeySystem {
             task.pressStartTime = 0;
         }
 
-        if (task.pressCount > 0 && task.currentPressCount >= task.pressCount) {
+        // 检查是否需要重置循环
+        String[] commands = task.command.split(",");
+        int commandCount = commands.length;
+
+        // pressCount > 0: 执行指定次数后停止
+        // pressCount = 0: 执行所有命令后重置循环
+        int maxCount = (task.pressCount > 0) ? task.pressCount : commandCount;
+
+        if (task.currentPressCount >= maxCount) {
             if (currentTime - task.lastCycleTime >= task.cycleInterval) {
                 task.currentPressCount = 0;
                 task.lastCycleTime = currentTime;
@@ -44,31 +52,11 @@ public class AutoKeySystem {
             return;
         }
 
-        if (task.pressCount == 0 && task.currentPressCount > 0) {
-            if (currentTime - task.lastCycleTime >= task.cycleInterval) {
-                task.currentPressCount = 0;
-                task.lastCycleTime = currentTime;
-                task.isHolding = false;
-            } else {
-                if (task.isHolding && currentTime - task.pressStartTime >= task.holdDuration) {
-                    // 执行命令
-                    if (task.shouldExecuteCommand()) {
-                        String[] commands = task.command.split(",");
-                        int index = Math.min(task.currentPressCount, commands.length - 1);
-                        executeCommand(commands[index].trim(), client);
-                    }
-                    task.isHolding = false;
-                }
-                return;
-            }
-        }
-
         // 执行命令
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
                 // 执行命令
                 if (task.shouldExecuteCommand()) {
-                    String[] commands = task.command.split(",");
                     int index = Math.min(task.currentPressCount, commands.length - 1);
                     executeCommand(commands[index].trim(), client);
                 }
