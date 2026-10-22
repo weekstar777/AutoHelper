@@ -30,9 +30,12 @@ public class TaskEditScreen extends Screen {
     private List<ButtonWidget> addRemoveButtons = new ArrayList<>();
 
     private double scrollOffset = 0;
+    private double maxScrollOffset = 0;
     private static final double SCROLL_SPEED = 20.0;
     private static final int LABEL_COLOR = 0xFFFFFF;
     private static final int FIELD_WIDTH = 180;
+    private static final int KEY_FIELD_WIDTH = 50;
+    private static final int CMD_FIELD_WIDTH = 135;
     private static final int SMALL_FIELD_WIDTH = 80;
     private static final int BUTTON_WIDTH = 20;
     private static final int ROW_HEIGHT = 25;
@@ -70,7 +73,7 @@ public class TaskEditScreen extends Screen {
 
         int centerX = this.width / 2;
         int startY = 40;
-        int currentY = startY - (int) scrollOffset;
+        int currentY = startY;
 
         taskNameField = new TextFieldWidget(
             this.textRenderer,
@@ -91,7 +94,7 @@ public class TaskEditScreen extends Screen {
 
             TextFieldWidget keyField = new TextFieldWidget(
                 this.textRenderer,
-                centerX - 90, currentY, 85, 20,
+                centerX - 90, currentY, KEY_FIELD_WIDTH, 20,
                 Text.of("按键")
             );
             keyField.setMaxLength(20);
@@ -102,7 +105,7 @@ public class TaskEditScreen extends Screen {
 
             TextFieldWidget cmdField = new TextFieldWidget(
                 this.textRenderer,
-                centerX, currentY, 85, 20,
+                centerX - 35, currentY, CMD_FIELD_WIDTH, 20,
                 Text.of("命令")
             );
             cmdField.setMaxLength(100);
@@ -119,7 +122,7 @@ public class TaskEditScreen extends Screen {
                         keyCommandPairs.add(new KeyCommandPair());
                         rebuildUI();
                     })
-                    .dimensions(centerX + 90, currentY, BUTTON_WIDTH, 20)
+                    .dimensions(centerX + 105, currentY, BUTTON_WIDTH, 20)
                     .build();
                 this.addDrawableChild(addBtn);
                 addRemoveButtons.add(addBtn);
@@ -133,7 +136,7 @@ public class TaskEditScreen extends Screen {
                             rebuildUI();
                         }
                     })
-                    .dimensions(centerX + 90, currentY, BUTTON_WIDTH, 20)
+                    .dimensions(centerX + 105, currentY, BUTTON_WIDTH, 20)
                     .build();
                 this.addDrawableChild(removeBtn);
                 addRemoveButtons.add(removeBtn);
@@ -205,6 +208,8 @@ public class TaskEditScreen extends Screen {
             button -> this.client.setScreen(parent))
             .dimensions(startX + buttonWidth + spacing, buttonY, buttonWidth, 20)
             .build());
+
+        maxScrollOffset = Math.max(0, currentY + 40 - this.height);
     }
 
     private void saveCurrentInputData() {
@@ -276,11 +281,15 @@ public class TaskEditScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
-        super.render(context, mouseX, mouseY, delta);
+
+        context.getMatrices().push();
+        context.getMatrices().translate(0, -scrollOffset, 0);
+
+        super.render(context, mouseX, (int)(mouseY + scrollOffset), delta);
 
         int centerX = this.width / 2;
         int startY = 40;
-        int currentY = startY - (int) scrollOffset;
+        int currentY = startY;
 
         context.drawCenteredTextWithShadow(this.textRenderer, this.title,
             centerX, 15, LABEL_COLOR);
@@ -309,12 +318,14 @@ public class TaskEditScreen extends Screen {
 
         context.drawTextWithShadow(this.textRenderer, "按键次数:",
             centerX - 90, currentY + 5, LABEL_COLOR);
+
+        context.getMatrices().pop();
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        scrollOffset = Math.max(0, scrollOffset - verticalAmount * SCROLL_SPEED);
-        rebuildUI();
+        double newOffset = scrollOffset - verticalAmount * SCROLL_SPEED;
+        scrollOffset = Math.max(0, Math.min(newOffset, maxScrollOffset));
         return true;
     }
 
