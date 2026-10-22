@@ -63,7 +63,7 @@ public class TaskEditScreen extends Screen {
                 KeyCommandPair pair = new KeyCommandPair();
                 pair.keyName = keys[i].trim();
                 pair.command = (i < commands.length) ? commands[i].trim() : "";
-                pair.isCommand = (i < types.length) ? "cmd".equals(types[i].trim()) : true;
+                pair.isCommand = (i < types.length) ? "cmd".equals(types[i].trim()) : false;
                 keyCommandPairs.add(pair);
             }
         }
@@ -456,7 +456,7 @@ public class TaskEditScreen extends Screen {
     private static class KeyCommandPair {
         String keyName = "";
         String command = "";
-        boolean isCommand = true;
+        boolean isCommand = false;  // 默认为消息模式
 
         boolean isValid() {
             return !keyName.trim().isEmpty() && !command.trim().isEmpty();

@@ -37,7 +37,7 @@ public class ConfigManager {
                 config = new ModConfig();
             }
 
-            // 为旧数据初始化commandTypes
+            // 为旧数据初始化commandTypes（默认为消息类型）
             boolean needsSave = false;
             for (KeyPressTask task : config.keyPressTasks) {
                 if (task.commandTypes == null || task.commandTypes.isEmpty()) {
@@ -46,6 +46,7 @@ public class ConfigManager {
                         StringBuilder types = new StringBuilder();
                         for (int i = 0; i < commands.length; i++) {
                             if (i > 0) types.append(",");
+                            // 只有明确以/开头的才是命令，其他都是消息
                             types.append(commands[i].trim().startsWith("/") ? "cmd" : "msg");
                         }
                         task.commandTypes = types.toString();
