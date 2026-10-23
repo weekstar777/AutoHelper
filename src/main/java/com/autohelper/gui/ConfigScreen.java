@@ -109,9 +109,11 @@ public class ConfigScreen extends Screen {
     private void createTaskButtons(int index, KeyPressTask task) {
         int y = TASKS_START_Y + (index * ENTRY_HEIGHT) - scrollOffset;
         int centerX = this.width / 2;
+        int listBottom = this.height - 40;
 
-        if (y + ENTRY_HEIGHT < TASKS_START_Y || y > this.height - 40) {
-            return; // Out of visible area
+        // 按钮高度20，确保按钮完全在可见区域内
+        if (y < TASKS_START_Y || y + 20 > listBottom) {
+            return; // 按钮超出可见区域
         }
 
         // Toggle button
