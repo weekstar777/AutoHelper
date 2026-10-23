@@ -107,11 +107,11 @@ public class ConfigScreen extends Screen {
     }
 
     private void createTaskButtons(int index, KeyPressTask task) {
-        int y = TASKS_START_Y + (index * ENTRY_HEIGHT);
+        int y = TASKS_START_Y + (index * ENTRY_HEIGHT) - scrollOffset;
         int centerX = this.width / 2;
 
-        if (y + ENTRY_HEIGHT > this.height - 40) {
-            return; // Out of screen
+        if (y + ENTRY_HEIGHT < TASKS_START_Y || y > this.height - 40) {
+            return; // Out of visible area
         }
 
         // Toggle button
@@ -168,8 +168,12 @@ public class ConfigScreen extends Screen {
         // Render task entries
         int y = TASKS_START_Y;
         for (TaskEntry entry : taskEntries) {
-            if (y + ENTRY_HEIGHT > this.height - 40) break;
-            renderTaskEntry(context, entry, y);
+            int renderY = y - scrollOffset;
+            if (renderY + ENTRY_HEIGHT < TASKS_START_Y || renderY > this.height - 40) {
+                y += ENTRY_HEIGHT;
+                continue;
+            }
+            renderTaskEntry(context, entry, renderY);
             y += ENTRY_HEIGHT;
         }
 
@@ -223,8 +227,10 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        scrollOffset = (int) Math.max(0, scrollOffset - verticalAmount * 10);
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        int maxScroll = Math.max(0, (taskEntries.size() * ENTRY_HEIGHT) - (this.height - TASKS_START_Y - 50));
+        scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 15));
+        refreshTaskList();
+        return true;
     }
 
     private static class TaskEntry {
