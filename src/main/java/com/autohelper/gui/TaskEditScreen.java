@@ -110,7 +110,7 @@ public class TaskEditScreen extends Screen {
                 centerX - 60, layoutY - (int) scrollOffset, CMD_FIELD_WIDTH, 20,
                 Text.of("命令")
             );
-            cmdField.setMaxLength(100);
+            cmdField.setMaxLength(500);
             cmdField.setText(pair.command);
             cmdField.setPlaceholder(Text.of("命令或消息"));
             this.addDrawableChild(cmdField);
