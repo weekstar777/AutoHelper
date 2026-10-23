@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class ConfigManager {
             return;
         }
 
-        try (FileReader reader = new FileReader(configFile)) {
+        try (FileReader reader = new FileReader(configFile, StandardCharsets.UTF_8)) {
             config = GSON.fromJson(reader, ModConfig.class);
             if (config == null) {
                 config = new ModConfig();
@@ -45,7 +46,7 @@ public class ConfigManager {
     }
 
     public void save() {
-        try (FileWriter writer = new FileWriter(configFile)) {
+        try (FileWriter writer = new FileWriter(configFile, StandardCharsets.UTF_8)) {
             GSON.toJson(config, writer);
             LOGGER.info("Configuration saved successfully");
         } catch (Exception e) {
