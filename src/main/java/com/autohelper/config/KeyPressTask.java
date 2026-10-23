@@ -19,12 +19,6 @@ public class KeyPressTask {
     public transient long pressStartTime = 0;
     public transient boolean isHolding = false;
 
-    // 兼容旧版本：保留String字段用于读取旧配置
-    @Deprecated
-    public transient String keyName;
-    @Deprecated
-    public transient String command;
-
     public KeyPressTask() {
         this.enabled = true;
         this.nickname = "";

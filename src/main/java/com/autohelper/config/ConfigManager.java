@@ -37,22 +37,6 @@ public class ConfigManager {
                 config = new ModConfig();
             }
 
-            // 迁移旧配置格式（使用|||分隔符的）到新格式（数组）
-            for (KeyPressTask task : config.keyPressTasks) {
-                if ((task.keyNames == null || task.keyNames.isEmpty()) && task.keyName != null) {
-                    task.keyNames = new ArrayList<>();
-                    for (String key : task.keyName.split("\\|\\|\\|")) {
-                        task.keyNames.add(key.trim());
-                    }
-                }
-                if ((task.commands == null || task.commands.isEmpty()) && task.command != null) {
-                    task.commands = new ArrayList<>();
-                    for (String cmd : task.command.split("\\|\\|\\|")) {
-                        task.commands.add(cmd.trim());
-                    }
-                }
-            }
-
             LOGGER.info("Configuration loaded successfully");
         } catch (Exception e) {
             LOGGER.error("Failed to load config, using defaults", e);
