@@ -111,10 +111,10 @@ public class ConfigScreen extends Screen {
         int centerX = this.width / 2;
         int listBottom = this.height - 40;
 
-        // 任务项高度30，只要任务项有任何部分在可见区域内就创建按钮
-        // 任务项范围：[y, y+30]，可见区域：[120, listBottom]
-        if (y + ENTRY_HEIGHT <= TASKS_START_Y || y >= listBottom) {
-            return; // 任务项完全在可见区域外
+        // 按钮必须完全在可见区域内，避免穿模到固定区域
+        // 按钮Y坐标为y，高度20，范围[y, y+20]必须在[120, listBottom]内
+        if (y < TASKS_START_Y || y + 20 > listBottom) {
+            return; // 按钮未完全在可见区域内
         }
 
         // Toggle button
