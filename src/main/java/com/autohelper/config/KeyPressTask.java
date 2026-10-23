@@ -1,9 +1,12 @@
 package com.autohelper.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class KeyPressTask {
     public String nickname;          // User-defined display name
-    public String keyName;           // Key name like "Q", "Num8", "S"
-    public String command;           // Command to execute (e.g., "/give @s apple 64")
+    public List<String> keyNames;    // List of key names
+    public List<String> commands;    // List of commands
     public int cycleInterval;        // Milliseconds between cycles
     public int keyInterval;          // Milliseconds between key presses
     public int holdDuration;         // Milliseconds to hold key
@@ -16,22 +19,17 @@ public class KeyPressTask {
     public transient long pressStartTime = 0;
     public transient boolean isHolding = false;
 
+    // 兼容旧版本：保留String字段用于读取旧配置
+    @Deprecated
+    public transient String keyName;
+    @Deprecated
+    public transient String command;
+
     public KeyPressTask() {
         this.enabled = true;
         this.nickname = "";
-        this.command = "";
-    }
-
-    public KeyPressTask(String keyName, int cycleInterval, int keyInterval,
-                       int holdDuration, int pressCount) {
-        this.keyName = keyName;
-        this.cycleInterval = cycleInterval;
-        this.keyInterval = keyInterval;
-        this.holdDuration = holdDuration;
-        this.pressCount = pressCount;
-        this.enabled = true;
-        this.nickname = "";
-        this.command = "";
+        this.keyNames = new ArrayList<>();
+        this.commands = new ArrayList<>();
     }
 
     public void reset() {
@@ -45,24 +43,26 @@ public class KeyPressTask {
         if (nickname != null && !nickname.trim().isEmpty()) {
             return nickname;
         }
-        if (keyName != null && !keyName.trim().isEmpty()) {
-            return keyName;
+        if (keyNames != null && !keyNames.isEmpty() && keyNames.get(0) != null && !keyNames.get(0).trim().isEmpty()) {
+            return keyNames.get(0);
         }
-        if (command != null && !command.trim().isEmpty()) {
-            // 截取命令的前20个字符作为显示名
-            return command.length() > 20 ? command.substring(0, 20) + "..." : command;
+        if (commands != null && !commands.isEmpty() && commands.get(0) != null && !commands.get(0).trim().isEmpty()) {
+            String cmd = commands.get(0);
+            return cmd.length() > 20 ? cmd.substring(0, 20) + "..." : cmd;
         }
         return "未命名任务";
     }
 
     // 辅助方法：判断是否应该执行按键
     public boolean shouldExecuteKeyPress() {
-        return keyName != null && !keyName.trim().isEmpty();
+        return keyNames != null && !keyNames.isEmpty() &&
+               keyNames.stream().anyMatch(k -> k != null && !k.trim().isEmpty());
     }
 
     // 辅助方法：判断是否应该执行命令
     public boolean shouldExecuteCommand() {
-        return command != null && !command.trim().isEmpty();
+        return commands != null && !commands.isEmpty() &&
+               commands.stream().anyMatch(c -> c != null && !c.trim().isEmpty());
     }
 }
 

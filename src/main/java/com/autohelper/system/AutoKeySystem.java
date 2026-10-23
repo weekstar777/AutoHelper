@@ -42,8 +42,10 @@ public class AutoKeySystem {
         }
 
         // 检查是否需要重置循环
-        String[] commands = task.command.split("\\|\\|\\|");
-        int commandCount = commands.length;
+        int commandCount = (task.commands != null) ? task.commands.size() : 0;
+        if (commandCount == 0) {
+            return;
+        }
 
         // pressCount > 0: 执行指定次数后停止
         // pressCount = 0: 执行所有命令后重置循环
@@ -63,8 +65,8 @@ public class AutoKeySystem {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
                 // 执行命令
                 if (task.shouldExecuteCommand()) {
-                    int index = Math.min(task.currentPressCount, commands.length - 1);
-                    executeCommand(commands[index].trim(), client);
+                    int index = Math.min(task.currentPressCount, commandCount - 1);
+                    executeCommand(task.commands.get(index).trim(), client);
                 }
                 task.isHolding = false;
                 task.currentPressCount++;

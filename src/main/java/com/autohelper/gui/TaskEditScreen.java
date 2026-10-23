@@ -52,14 +52,12 @@ public class TaskEditScreen extends Screen {
         this.taskIndex = taskIndex;
         this.isNewTask = (task == null);
 
-        if (this.task.keyName != null && !this.task.keyName.isEmpty()) {
-            String[] keys = this.task.keyName.split("\\|\\|\\|");
-            String[] commands = this.task.command != null ? this.task.command.split("\\|\\|\\|") : new String[0];
-
-            for (int i = 0; i < keys.length; i++) {
+        // 从任务的数组加载按键-命令对
+        if (this.task.keyNames != null && !this.task.keyNames.isEmpty()) {
+            for (int i = 0; i < this.task.keyNames.size(); i++) {
                 KeyCommandPair pair = new KeyCommandPair();
-                pair.keyName = keys[i].trim();
-                pair.command = (i < commands.length) ? commands[i].trim() : "";
+                pair.keyName = this.task.keyNames.get(i);
+                pair.command = (i < this.task.commands.size()) ? this.task.commands.get(i) : "";
                 keyCommandPairs.add(pair);
             }
         }
@@ -282,9 +280,6 @@ public class TaskEditScreen extends Screen {
             return false;
         }
 
-        String keyName = String.join("|||", validKeys);
-        String command = String.join("|||", validCommands);
-
         try {
             int loopInterval = Integer.parseInt(loopIntervalField.getText());
             int keyInterval = Integer.parseInt(keyIntervalField.getText());
@@ -292,8 +287,8 @@ public class TaskEditScreen extends Screen {
             int pressCount = Integer.parseInt(pressCountField.getText());
 
             task.nickname = nickname;
-            task.keyName = keyName;
-            task.command = command;
+            task.keyNames = validKeys;
+            task.commands = validCommands;
             task.cycleInterval = loopInterval;
             task.keyInterval = keyInterval;
             task.holdDuration = holdDuration;

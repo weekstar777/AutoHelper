@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(Keyboard.class)
 public class KeyboardMixin {
 
@@ -47,60 +49,39 @@ public class KeyboardMixin {
             }
 
             // 检查按键是否匹配
-            if (task.keyName != null && !task.keyName.isEmpty()) {
+            if (task.keyNames != null && !task.keyNames.isEmpty()) {
                 int keyIndex = -1;
 
-                // 检查是否是|||分隔的按键列表（如 "A|||B|||Space"）
-                if (task.keyName.contains("|||")) {
-                    String[] keys = task.keyName.split("\\|\\|\\|");
-                    for (int i = 0; i < keys.length; i++) {
-                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(keys[i].trim());
-                        if (taskKeyCode == key) {
-                            keyIndex = i;
-                            break;
-                        }
-                    }
-                } else if (task.keyName.length() > 1 && task.keyName.matches("[A-Z]+")) {
-                    // 连续字母序列（如 "ABC"）
-                    for (int i = 0; i < task.keyName.length(); i++) {
-                        int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(String.valueOf(task.keyName.charAt(i)));
-                        if (taskKeyCode == key) {
-                            keyIndex = i;
-                            break;
-                        }
-                    }
-                } else {
-                    // 单个按键匹配
-                    int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(task.keyName);
+                // 检查按键列表
+                for (int i = 0; i < task.keyNames.size(); i++) {
+                    int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(task.keyNames.get(i).trim());
                     if (taskKeyCode == key) {
-                        keyIndex = 0;
+                        keyIndex = i;
+                        break;
                     }
                 }
 
                 if (keyIndex != -1) {
                     // 匹配成功，执行对应的命令
-                    executeCommandByIndex(task.command, keyIndex, client);
+                    executeCommandByIndex(task.commands, keyIndex, client);
                 }
             }
         }
     }
 
-    private void executeCommandByIndex(String command, int index, MinecraftClient client) {
-        if (command == null || command.trim().isEmpty()) {
+    private void executeCommandByIndex(List<String> commands, int index, MinecraftClient client) {
+        if (commands == null || commands.isEmpty()) {
             return;
         }
 
         try {
-            // 分割命令列表（用|||分隔）
-            String[] commands = command.split("\\|\\|\\|");
-
             // 获取对应索引的命令
             String text;
-            if (index < commands.length) {
-                text = commands[index].trim();
+            if (index < commands.size()) {
+                text = commands.get(index).trim();
             } else {
                 // 如果索引超出命令数量，使用最后一个命令
-                text = commands[commands.length - 1].trim();
+                text = commands.get(commands.size() - 1).trim();
             }
 
             if (text.startsWith("/")) {
@@ -116,9 +97,5 @@ public class KeyboardMixin {
         } catch (Exception e) {
             System.err.println("[AutoHelper] Failed to execute manual command: " + e.getMessage());
         }
-    }
-
-    private void executeCommand(String command, MinecraftClient client) {
-        executeCommandByIndex(command, 0, client);
     }
 }
