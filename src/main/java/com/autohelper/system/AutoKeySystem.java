@@ -28,6 +28,12 @@ public class AutoKeySystem {
     }
 
     private void processTask(KeyPressTask task, long currentTime, MinecraftClient client) {
+        // 如果所有定时参数都为0，则不启用定时触发（仅手动触发）
+        if (task.cycleInterval == 0 && task.keyInterval == 0 &&
+            task.holdDuration == 0 && task.pressCount == 0) {
+            return;
+        }
+
         if (task.lastCycleTime == 0) {
             task.lastCycleTime = currentTime;
             task.currentPressCount = 0;
