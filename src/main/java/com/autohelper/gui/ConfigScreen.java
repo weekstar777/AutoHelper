@@ -110,7 +110,7 @@ public class ConfigScreen extends Screen {
         int y = TASKS_START_Y + (index * ENTRY_HEIGHT) - scrollOffset;
         int centerX = this.width / 2;
 
-        // 创建所有按钮，不判断边界，通过visible属性控制显示
+        // 创建按钮，只添加到交互列表，不自动渲染（手动在scissor内渲染）
         // Toggle button
         ButtonWidget toggleBtn = ButtonWidget.builder(
             Text.translatable(task.enabled ?
@@ -122,7 +122,7 @@ public class ConfigScreen extends Screen {
             })
             .dimensions(centerX - 150, y, 50, 20)
             .build();
-        this.addDrawableChild(toggleBtn);
+        this.addSelectableChild(toggleBtn);  // 只添加交互，不自动渲染
         taskButtons.add(toggleBtn);
 
         // Edit button
@@ -132,7 +132,7 @@ public class ConfigScreen extends Screen {
                 new TaskEditScreen(this, configManager, task, index)))
             .dimensions(centerX + 55, y, 45, 20)
             .build();
-        this.addDrawableChild(editBtn);
+        this.addSelectableChild(editBtn);
         taskButtons.add(editBtn);
 
         // Delete button
@@ -144,18 +144,16 @@ public class ConfigScreen extends Screen {
             })
             .dimensions(centerX + 105, y, 20, 20)
             .build();
-        this.addDrawableChild(deleteBtn);
+        this.addSelectableChild(deleteBtn);
         taskButtons.add(deleteBtn);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // 更新按钮可见性
-        updateButtonVisibility();
-
         // Render background
         this.renderBackground(context, mouseX, mouseY, delta);
 
+        // 渲染固定元素（服务器地址、固定按钮等）
         super.render(context, mouseX, mouseY, delta);
 
         // Server address label
@@ -168,6 +166,11 @@ public class ConfigScreen extends Screen {
         // 启用裁剪区域，限制任务列表渲染范围
         int listBottom = this.height - 40;
         context.enableScissor(0, TASKS_START_Y, this.width, listBottom);
+
+        // 手动渲染任务按钮（在scissor内，会被裁剪）
+        for (ButtonWidget button : taskButtons) {
+            button.render(context, mouseX, mouseY, delta);
+        }
 
         // Render task entries
         int y = TASKS_START_Y;
@@ -234,15 +237,6 @@ public class ConfigScreen extends Screen {
         scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 15));
         refreshTaskList();
         return true;
-    }
-
-    private void updateButtonVisibility() {
-        int listBottom = this.height - 40;
-        for (ButtonWidget button : taskButtons) {
-            int buttonY = button.getY();
-            // 按钮完全在可见区域内才显示，超出部分被"遮挡"
-            button.visible = buttonY >= TASKS_START_Y && buttonY + 20 <= listBottom;
-        }
     }
 
     private static class TaskEntry {
