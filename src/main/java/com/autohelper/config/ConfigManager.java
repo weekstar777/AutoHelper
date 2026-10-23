@@ -6,11 +6,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ConfigManager {
@@ -32,7 +29,8 @@ public class ConfigManager {
             return;
         }
 
-        try (FileReader reader = new FileReader(configFile, StandardCharsets.UTF_8)) {
+        try (InputStreamReader reader = new InputStreamReader(
+                new FileInputStream(configFile), StandardCharsets.UTF_8)) {
             config = GSON.fromJson(reader, ModConfig.class);
             if (config == null) {
                 config = new ModConfig();
@@ -46,7 +44,8 @@ public class ConfigManager {
     }
 
     public void save() {
-        try (FileWriter writer = new FileWriter(configFile, StandardCharsets.UTF_8)) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                new FileOutputStream(configFile), StandardCharsets.UTF_8)) {
             GSON.toJson(config, writer);
             LOGGER.info("Configuration saved successfully");
         } catch (Exception e) {
