@@ -2,7 +2,6 @@ package com.autohelper.system;
 
 import com.autohelper.config.ConfigManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
@@ -10,7 +9,6 @@ import net.minecraft.client.network.ServerInfo;
 public class ServerAutoJoin {
     private final ConfigManager configManager;
     private long lastAttemptTime = 0;
-    private boolean hasAttempted = false;
 
     public ServerAutoJoin(ConfigManager configManager) {
         this.configManager = configManager;
@@ -29,16 +27,16 @@ public class ServerAutoJoin {
         long currentTime = System.currentTimeMillis();
         int retryInterval = configManager.getConfig().retryInterval;
 
-        // Check if on title screen or disconnected
-        if (client.world == null && client.currentScreen instanceof TitleScreen) {
-            if (!hasAttempted || (currentTime - lastAttemptTime >= retryInterval)) {
+        // 检测是否在服务器内：只有client.world != null才表示在游戏世界中
+        if (client.world == null) {
+            // 不在服务器内，无论什么界面都尝试连接
+            if (currentTime - lastAttemptTime >= retryInterval) {
                 attemptConnection(client, serverAddress);
                 lastAttemptTime = currentTime;
-                hasAttempted = true;
             }
-        } else if (client.world != null) {
-            // Reset when successfully connected
-            hasAttempted = false;
+        } else {
+            // 在服务器内，重置计时器以便下次退出时立即触发
+            lastAttemptTime = currentTime - retryInterval;
         }
     }
 
@@ -53,8 +51,6 @@ public class ServerAutoJoin {
     }
 
     public void reset() {
-        hasAttempted = false;
         lastAttemptTime = 0;
     }
 }
-
