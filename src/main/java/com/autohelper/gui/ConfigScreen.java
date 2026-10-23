@@ -109,14 +109,8 @@ public class ConfigScreen extends Screen {
     private void createTaskButtons(int index, KeyPressTask task) {
         int y = TASKS_START_Y + (index * ENTRY_HEIGHT) - scrollOffset;
         int centerX = this.width / 2;
-        int listBottom = this.height - 40;
 
-        // 按钮必须完全在可见区域内，避免穿模到固定区域
-        // 按钮Y坐标为y，高度20，范围[y, y+20]必须在[120, listBottom]内
-        if (y < TASKS_START_Y || y + 20 > listBottom) {
-            return; // 按钮未完全在可见区域内
-        }
-
+        // 创建所有按钮，不判断边界，通过visible属性控制显示
         // Toggle button
         ButtonWidget toggleBtn = ButtonWidget.builder(
             Text.translatable(task.enabled ?
@@ -156,6 +150,9 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // 更新按钮可见性
+        updateButtonVisibility();
+
         // Render background
         this.renderBackground(context, mouseX, mouseY, delta);
 
@@ -237,6 +234,15 @@ public class ConfigScreen extends Screen {
         scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - verticalAmount * 15));
         refreshTaskList();
         return true;
+    }
+
+    private void updateButtonVisibility() {
+        int listBottom = this.height - 40;
+        for (ButtonWidget button : taskButtons) {
+            int buttonY = button.getY();
+            // 按钮完全在可见区域内才显示，超出部分被"遮挡"
+            button.visible = buttonY >= TASKS_START_Y && buttonY + 20 <= listBottom;
+        }
     }
 
     private static class TaskEntry {
