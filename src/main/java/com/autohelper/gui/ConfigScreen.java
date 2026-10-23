@@ -165,14 +165,14 @@ public class ConfigScreen extends Screen {
 
         serverAddressField.render(context, mouseX, mouseY, delta);
 
+        // 启用裁剪区域，限制任务列表渲染范围
+        int listBottom = this.height - 40;
+        context.enableScissor(0, TASKS_START_Y, this.width, listBottom);
+
         // Render task entries
         int y = TASKS_START_Y;
         for (TaskEntry entry : taskEntries) {
             int renderY = y - scrollOffset;
-            if (renderY + ENTRY_HEIGHT < TASKS_START_Y || renderY > this.height - 40) {
-                y += ENTRY_HEIGHT;
-                continue;
-            }
             renderTaskEntry(context, entry, renderY);
             y += ENTRY_HEIGHT;
         }
@@ -183,6 +183,9 @@ public class ConfigScreen extends Screen {
                 Text.translatable("gui.autohelper.config.no_tasks"),
                 this.width / 2, TASKS_START_Y + 10, 0x888888);
         }
+
+        // 禁用裁剪
+        context.disableScissor();
     }
 
     private void renderTaskEntry(DrawContext context, TaskEntry entry, int y) {
