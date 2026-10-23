@@ -42,7 +42,7 @@ public class AutoKeySystem {
         }
 
         // 检查是否需要重置循环
-        String[] commands = task.command.split(",");
+        String[] commands = task.command.split("\\|\\|\\|");
         int commandCount = commands.length;
 
         // pressCount > 0: 执行指定次数后停止

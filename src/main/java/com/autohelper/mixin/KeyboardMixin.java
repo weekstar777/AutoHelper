@@ -50,9 +50,9 @@ public class KeyboardMixin {
             if (task.keyName != null && !task.keyName.isEmpty()) {
                 int keyIndex = -1;
 
-                // 检查是否是逗号分隔的按键列表（如 "A,B,Space"）
-                if (task.keyName.contains(",")) {
-                    String[] keys = task.keyName.split(",");
+                // 检查是否是|||分隔的按键列表（如 "A|||B|||Space"）
+                if (task.keyName.contains("|||")) {
+                    String[] keys = task.keyName.split("\\|\\|\\|");
                     for (int i = 0; i < keys.length; i++) {
                         int taskKeyCode = KeyCodeMapper.getGlfwKeyCode(keys[i].trim());
                         if (taskKeyCode == key) {
@@ -91,8 +91,8 @@ public class KeyboardMixin {
         }
 
         try {
-            // 分割命令列表（用逗号分隔）
-            String[] commands = command.split(",");
+            // 分割命令列表（用|||分隔）
+            String[] commands = command.split("\\|\\|\\|");
 
             // 获取对应索引的命令
             String text;

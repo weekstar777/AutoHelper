@@ -53,8 +53,8 @@ public class TaskEditScreen extends Screen {
         this.isNewTask = (task == null);
 
         if (this.task.keyName != null && !this.task.keyName.isEmpty()) {
-            String[] keys = this.task.keyName.split(",");
-            String[] commands = this.task.command != null ? this.task.command.split(",") : new String[0];
+            String[] keys = this.task.keyName.split("\\|\\|\\|");
+            String[] commands = this.task.command != null ? this.task.command.split("\\|\\|\\|") : new String[0];
 
             for (int i = 0; i < keys.length; i++) {
                 KeyCommandPair pair = new KeyCommandPair();
@@ -282,8 +282,8 @@ public class TaskEditScreen extends Screen {
             return false;
         }
 
-        String keyName = String.join(",", validKeys);
-        String command = String.join(",", validCommands);
+        String keyName = String.join("|||", validKeys);
+        String command = String.join("|||", validCommands);
 
         try {
             int loopInterval = Integer.parseInt(loopIntervalField.getText());
