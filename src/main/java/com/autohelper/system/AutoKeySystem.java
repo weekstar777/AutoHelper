@@ -27,6 +27,16 @@ public class AutoKeySystem {
         }
     }
 
+    /**
+     * 重置所有任务的定时状态
+     * 在玩家进入世界时调用，确保所有模组加载完成后才开始定时
+     */
+    public void resetAllTasks() {
+        for (KeyPressTask task : configManager.getTasks()) {
+            task.reset();
+        }
+    }
+
     private void processTask(KeyPressTask task, long currentTime, MinecraftClient client) {
         // 如果所有定时参数都为0，则不启用定时触发（仅手动触发）
         if (task.cycleInterval == 0 && task.keyInterval == 0 &&
