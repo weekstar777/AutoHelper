@@ -60,6 +60,11 @@ public class AutoKeySystem {
             return;
         }
 
+        // 每个周期开始时，必须等待 cycleInterval 后才能开始执行
+        if (task.currentPressCount == 0 && currentTime - task.lastCycleTime < task.cycleInterval) {
+            return;
+        }
+
         // 执行命令
         if (task.isHolding) {
             if (currentTime - task.pressStartTime >= task.holdDuration) {
