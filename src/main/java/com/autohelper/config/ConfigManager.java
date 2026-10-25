@@ -36,7 +36,20 @@ public class ConfigManager {
                 config = new ModConfig();
             }
 
+            // 配置迁移：确保retryInterval至少为20秒
+            boolean needSave = false;
+            if (config.retryInterval < 20000) {
+                LOGGER.info("Migrating old retryInterval {} to 20000", config.retryInterval);
+                config.retryInterval = 20000;
+                needSave = true;
+            }
+
             LOGGER.info("Configuration loaded successfully");
+
+            // 保存更新后的配置
+            if (needSave) {
+                save();
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to load config, using defaults", e);
             config = new ModConfig();
