@@ -9,6 +9,7 @@ import net.minecraft.client.network.ServerInfo;
 public class ServerAutoJoin {
     private final ConfigManager configManager;
     private long lastAttemptTime;
+    private boolean wasInServer = false;
 
     public ServerAutoJoin(ConfigManager configManager) {
         this.configManager = configManager;
@@ -29,14 +30,23 @@ public class ServerAutoJoin {
         long currentTime = System.currentTimeMillis();
         int retryInterval = configManager.getConfig().retryInterval;
 
-        // 检查是否真正在游戏世界中（world和player都存在）
-        if (client.world != null && client.player != null) {
-            // 玩家在服务器内，重置计时器以便下次退出时立即重连
-            lastAttemptTime = currentTime - retryInterval;
+        // 检查是否在服务器内
+        boolean isInServer = client.world != null && client.player != null;
+
+        if (isInServer) {
+            // 在服务器内，标记状态并返回
+            wasInServer = true;
             return;
         }
 
-        // 不在服务器内，检查是否到达连接时间
+        // 不在服务器内
+        if (wasInServer) {
+            // 刚从服务器退出，重置计时器，需要等待后才能重连
+            lastAttemptTime = currentTime;
+            wasInServer = false;
+        }
+
+        // 检查是否到达连接时间
         if (currentTime - lastAttemptTime >= retryInterval) {
             attemptConnection(client, serverAddress);
             lastAttemptTime = currentTime;
