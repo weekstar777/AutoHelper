@@ -8,10 +8,12 @@ import net.minecraft.client.network.ServerInfo;
 
 public class ServerAutoJoin {
     private final ConfigManager configManager;
-    private long lastAttemptTime = 0;
+    private long lastAttemptTime;
 
     public ServerAutoJoin(ConfigManager configManager) {
         this.configManager = configManager;
+        // 初始化为当前时间，确保第一次连接前等待完整的retryInterval
+        this.lastAttemptTime = System.currentTimeMillis();
     }
 
     public void tick(MinecraftClient client) {

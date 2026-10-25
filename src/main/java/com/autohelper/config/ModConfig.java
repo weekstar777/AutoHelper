@@ -8,7 +8,7 @@ public class ModConfig {
     public String serverAddress = "";
     public boolean autoJoinServer = false;
     public boolean maximizeWindow = true;
-    public int retryInterval = 5000; // 5 seconds in milliseconds
+    public int retryInterval = 10000; // 10 seconds in milliseconds
 
     public ModConfig() {
     }
