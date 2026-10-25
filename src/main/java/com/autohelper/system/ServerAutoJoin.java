@@ -29,16 +29,17 @@ public class ServerAutoJoin {
         long currentTime = System.currentTimeMillis();
         int retryInterval = configManager.getConfig().retryInterval;
 
-        // 检测是否在服务器内：只有client.world != null才表示在游戏世界中
-        if (client.world == null) {
-            // 不在服务器内，无论什么界面都尝试连接
-            if (currentTime - lastAttemptTime >= retryInterval) {
-                attemptConnection(client, serverAddress);
-                lastAttemptTime = currentTime;
-            }
-        } else {
-            // 在服务器内，重置计时器以便下次退出时立即触发
+        // 检查是否真正在游戏世界中（world和player都存在）
+        if (client.world != null && client.player != null) {
+            // 玩家在服务器内，重置计时器以便下次退出时立即重连
             lastAttemptTime = currentTime - retryInterval;
+            return;
+        }
+
+        // 不在服务器内，检查是否到达连接时间
+        if (currentTime - lastAttemptTime >= retryInterval) {
+            attemptConnection(client, serverAddress);
+            lastAttemptTime = currentTime;
         }
     }
 
